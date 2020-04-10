@@ -1,0 +1,35 @@
+model{
+  
+  # ------------------------------
+  # Priors
+  # ------------------------------
+  
+  # Average whale response threshold
+  mu~dunif(lower.bound,upper.bound)
+  
+  # Overall variation (sd), including both between and within-whale variation
+  omega~dunif(0,omega.upper.bound)
+  inv_omega2<-pow(omega,-2)
+  
+  # ------------------------------
+  # Process model
+  # ------------------------------
+  
+  for(i in 1:n.whales){
+    mu_i[i]~dnorm(mu, inv_omega2) T(lower.bound,upper.bound)
+  }
+  
+  # ------------------------------
+  # Observation model
+  # ------------------------------
+  
+  for(i in 1:n.whales){
+  
+  y[i]~dnorm(mu_i[i], measurement.precision)
+  
+  # Right-censoring
+  I.censored[i]~dinterval(y[i],U[i])
+  
+  }
+  
+}

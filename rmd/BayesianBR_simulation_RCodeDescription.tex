@@ -1,0 +1,763 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames*,x11names*}{xcolor}
+%
+\documentclass[
+]{article}
+\usepackage{lmodern}
+\usepackage{setspace}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+  \setmainfont[]{Arial}
+  \setsansfont[]{Courier}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Simulating cetacean responses to sonar exposure within a Bayesian hierarchical modelling framework --- R code description},
+  pdfauthor={Phil Bouchet, Catriona Harris, Len Thomas},
+  colorlinks=true,
+  linkcolor=Maroon,
+  filecolor=Maroon,
+  citecolor=Blue,
+  urlcolor=Blue,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{longtable,booktabs}
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{5}
+\usepackage{courier} % Courier font
+\usepackage{xcolor, soul, enumitem}
+\usepackage{float}
+\usepackage[T1]{fontenc}
+\hypersetup{colorlinks=true, urlcolor = [rgb]{0, 0.35, 0.66}, linkcolor = [rgb]{0, 0.35, 0.66}}
+\definecolor{highlightcolor}{HTML}{E8F6FF}
+\definecolor{codecolor}{HTML}{0063B7}
+\sethlcolor{highlightcolor}
+\setmainfont{Arial}
+\defaultfontfeatures+[\sffamily,\ttfamily]{Scale=MatchLowercase}
+\setmonofont[Scale=MatchLowercase,Ligatures=NoCommon,Scale=0.85]{Courier}
+\floatplacement{figure}{H}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{colortbl}
+\usepackage{pdflscape}
+\usepackage{tabu}
+\usepackage{threeparttable}
+\usepackage{threeparttablex}
+\usepackage[normalem]{ulem}
+\usepackage{makecell}
+\usepackage{xcolor}
+
+\title{Simulating cetacean responses to sonar exposure within a Bayesian hierarchical modelling framework --- R code description}
+\usepackage{etoolbox}
+\makeatletter
+\providecommand{\subtitle}[1]{% add subtitle to \maketitle
+  \apptocmd{\@title}{\par {\large #1 \par}}{}{}
+}
+\makeatother
+\subtitle{R code description}
+\author{Phil Bouchet, Catriona Harris, Len Thomas}
+\date{10 April, 2020}
+
+\begin{document}
+\maketitle
+
+{
+\hypersetup{linkcolor=black}
+\setcounter{tocdepth}{3}
+\tableofcontents
+}
+\setstretch{0.9}
+\renewcommand{\figurename}{\textbf{Figure }}
+\renewcommand{\caption}{\textbf{Figure }}
+\newcommand{\code}[1]{\textcolor{codecolor}{\texttt{\hl{#1}}}}
+\setstretch{1.15}
+
+\section{Introduction}
+
+This document describes R functions for simulating cetacean responses to various sonar exposure contexts, within a Bayesian hierarchical modelling framework. The functions are designed to support a sensitivity analysis of the effects of uncertainty in acoustic dose measurements (i.e.~received sound levels) on the probability of behavioural response. This work is motivated by the need to assess the utility of different tag types in improving our understanding of dose-response relationships (Schick \emph{et al.} \protect\hyperlink{ref-Schick2019}{2019}). For more details, please refer to the accompanying technical report (Bouchet \emph{et al.} \protect\hyperlink{ref-Bouchet2020a}{2020}).
+
+\textbf{Note:} The code implements adaptations of the Bayesian hierarchical dose-response model described in Miller \emph{et al.} (\protect\hyperlink{ref-Miller2014}{2014}), and written in the JAGS dialect of the BUGS language. Model files are stored in the \textcolor{codecolor}{\texttt{\hl{jags}}} folder within the working directory and are named: \textcolor{codecolor}{\texttt{\hl{BayesianBRSModel\_JAGSsim\_v1.txt}}} for scenario 1, \textcolor{codecolor}{\texttt{\hl{BayesianBRSModel\_JAGSsim\_v2.txt}}} for scenario 2 etc.
+
+\subsection{Loading packages}
+
+The \href{https://cran.r-project.org/web/packages/pacman/index.html}{\texttt{pacman} package} (Rinker and Kurkiewicz \protect\hyperlink{ref-Rinker2018}{2018}) is a handy tool to load the required libraries, as shown below. The \textcolor{codecolor}{\texttt{\hl{p\_load()}}} function, used here, automatically installs any packages not already present on the user's machine. Setting the seed of R's random number generator (using \textcolor{codecolor}{\texttt{\hl{set.seed()}}}, followed by any number) guarantees that simulations or random objects can be reproduced.
+
+Note: \textcolor{codecolor}{\texttt{\hl{pacman}}} can be installed from CRAN via \textcolor{codecolor}{\texttt{\hl{install.packages("pacman")}}}. A development version is also available on Github and can be installed by running the command below:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(devtools); devtools}\OperatorTok{::}\KeywordTok{install_github}\NormalTok{(}\StringTok{"trinker/pacman"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#'--------------------------------------------------------------------}
+\CommentTok{# Load required libraries}
+\CommentTok{#'--------------------------------------------------------------------}
+\NormalTok{pacman}\OperatorTok{::}\KeywordTok{p_load}\NormalTok{(rjags,          }\CommentTok{# Bayesian graphical models using MCMC}
+\NormalTok{               coda,           }\CommentTok{# Output analysis and diagnostics for MCMC}
+\NormalTok{               MASS,           }\CommentTok{# Support functions for applied statistics}
+\NormalTok{               truncnorm,      }\CommentTok{# Truncated Normal}
+\NormalTok{               tidyverse,      }\CommentTok{# R packages for data science}
+\NormalTok{               lubridate,      }\CommentTok{# Dates and times made easy}
+\NormalTok{               parallel,       }\CommentTok{# Support for parallel computation}
+\NormalTok{               doParallel,     }\CommentTok{# Parallel backend for the foreach/%dopar% function}
+\NormalTok{               utils,          }\CommentTok{# R utility functions}
+\NormalTok{               pals,           }\CommentTok{# Comprehensive palettes and palette evaluation tools}
+\NormalTok{               viridisLite,    }\CommentTok{# Viridis colour palette}
+\NormalTok{               ArgumentCheck,  }\CommentTok{# Improved communication re problems in function arguments         }
+\NormalTok{               crayon,         }\CommentTok{# Colored terminal output}
+\NormalTok{               ggnewscale,     }\CommentTok{# Multiple colour scales in ggplot2}
+\NormalTok{               MCMCvis,        }\CommentTok{# Visualise, manipulate, and summarise MCMC output}
+\NormalTok{               HDInterval,     }\CommentTok{# Highest (Posterior) Density Intervals }
+\NormalTok{               reshape2,       }\CommentTok{# Flexibly reshape data}
+\NormalTok{               bayesplot,      }\CommentTok{# Plotting for Bayesian Models}
+\NormalTok{               gridExtra,      }\CommentTok{# Miscellaneous functions for "grid" graphics}
+\NormalTok{               ggpubr,         }\CommentTok{# Tools for publication ready plots}
+\NormalTok{               plyr,           }\CommentTok{# The split-apply-combine paradigm for R}
+\NormalTok{               rlang,          }\CommentTok{# Tools for core language features of R and the tidyverse}
+\NormalTok{               ggridges,       }\CommentTok{# Ridgeline plots with ggplot2}
+\NormalTok{               hms,            }\CommentTok{# Pretty time of day}
+\NormalTok{               cowplot,        }\CommentTok{# Add-on for complex ggplot}
+\NormalTok{               grDevices,      }\CommentTok{# R Graphics Devices and Support for Colours and Fonts}
+\NormalTok{               tictoc)         }\CommentTok{# Functions for timing}
+      
+\KeywordTok{set.seed}\NormalTok{(}\DecValTok{75}\NormalTok{) }\CommentTok{# Set the random seed}
+\end{Highlighting}
+\end{Shaded}
+
+\pagebreak
+
+\subsection{Importing bespoke functions}
+
+All required functions are stored in the \textcolor{codecolor}{\texttt{\hl{BayesianBR\_simulation\_functions.R}}} file, and must first be imported into the R workspace.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{#'--------------------------------------------------------------------}
+\CommentTok{# Load required functions}
+\CommentTok{#'--------------------------------------------------------------------}
+\KeywordTok{source}\NormalTok{(}\StringTok{'../BayesianBR_simulation_functions.R'}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\subsection{Simulation scenarios}
+
+Four simulation scenarios of increasing complexity are considered (see Bouchet \emph{et al.} \protect\hyperlink{ref-Bouchet2020a}{2020}). These differ in (i) their observation model, i.e.~the treatment of errors relating to the measurements of acoustic dose (either fixed for all animals, or varying by tag type), and (ii) the complexity of the model structure, i.e.~which either allows covariate effects and multiple exposure sessions, or not. The true underlying mean response threshold (for all whales), \(\mu\), is chosen as the received sound pressure level (SPL) corresponding to a p(response) = 0.5 for a ``typical odontocete'', in line with existing biphasic response curves (for relevant code, see \url{https://github.com/pjbouchet/dose-response/tree/master/biphasic}). This gives a true \(\mu\) = 165 dB re 1 \(\mu\)Pa, which is broadly consistent with the values used in Miller \emph{et al.} (\protect\hyperlink{ref-Miller2014}{2014}), Schick \emph{et al.} (\protect\hyperlink{ref-Schick2019}{2019}), and other studies. Between-animal variation is set to \(\phi\) = 20 dB re 1 \(\mu\)Pa by default (but can be changed, if necessary). Likewise, the within-whale variation takes the value of \(\sigma\) = 25 dB. As variances add, the overall combined variation \(\omega\) is equal to \(\sqrt{{\phi}^2 + {\sigma}^2}\approx\) 30 dB. A range of sample sizes is tested, from n = 5 to n = 40 individuals. Errors in dose measurements are expressed as standard deviations in received SPL, and fall along a spectrum from 2.5 dB to 35 dB. The lower bound reflects typical errors observed on DTAGs (Isojunno \& Wensveen, personal communication), while the upper bound is consistent with estimates from sattelite-tagged whales (Schick \emph{et al.} \protect\hyperlink{ref-Schick2019}{2019}; Joyce \emph{et al.} \protect\hyperlink{ref-Joyce2020}{2020}).
+
+\section{Code}
+
+\subsection{Overview}
+
+The code proceeds in 10 steps:
+
+\setlist[itemize]{leftmargin=*}
+
+\begin{itemize}
+\item
+  \textbf{Step 1: Perform initial checks.} A number of sanity checks are implemented to ensure that input parameters are correctly specified. For instance, an error is returned if \textcolor{codecolor}{\texttt{\hl{lower.bound}}} exceeds \textcolor{codecolor}{\texttt{\hl{upper.bound}}}, and a warning issued if the desired number of cores exceeds the capacity of the processor (by default, the maximum number of cores is then used in this case). In addition, relevent folders are created on disk (if not already present) to store simulation outputs. These contain an index (.txt) file, used to assign a unique identifying number to each simulation run.
+\item
+  \textbf{Step 2: Run simulations.} The simulations are run in parallel on as many cores as specified by \textcolor{codecolor}{\texttt{\hl{parallel.cores}}}. Simulated observations are generated for every combination of \textcolor{codecolor}{\texttt{\hl{n.whales}}} x \textcolor{codecolor}{\texttt{\hl{uncertainty.dose}}} (in scenarios 1 and 2) or \textcolor{codecolor}{\texttt{\hl{n.whales}}} x \textcolor{codecolor}{\texttt{\hl{prop.sat}}} (in scenarios 3 and 4), and the hierarchical model corresponding to the relevant \textcolor{codecolor}{\texttt{\hl{scenario}}} is compiled and executed using the \href{https://CRAN.R-project.org/package=rjags}{\texttt{rjags}} package (Plummer \protect\hyperlink{ref-Plummer2019}{2019}). Setting \textcolor{codecolor}{\texttt{\hl{verbose = TRUE}}} ensures that a text-based summary of simulation parameters/steps is printed to the R console during execution (Figure \hyperlink{fig1}{1}). As a reminder, analyses in \textcolor{codecolor}{\texttt{\hl{rjags}}} follow a standard structure:
+\end{itemize}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Define the model using the BUGS language in a separate text file (here, model files are saved in the in the \textcolor{codecolor}{\texttt{\hl{jags}}} folder).
+\item
+  Read in the model file using the \textcolor{codecolor}{\texttt{\hl{jags.model()}}} function. This creates an object of class \textcolor{codecolor}{\texttt{\hl{jags}}}.
+\item
+  Update the model using the \textcolor{codecolor}{\texttt{\hl{update}}} method for \textcolor{codecolor}{\texttt{\hl{jags}}} objects. This constitutes a `burn-in' period.
+\item
+  Extract samples from the model object using the \textcolor{codecolor}{\texttt{\hl{coda.samples()}}} function. This creates an object of class \textcolor{codecolor}{\texttt{\hl{mcmc.list}}} which can be used to summarize the posterior distribution.
+\end{enumerate}
+
+
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.7\linewidth]{fig/fig_console_output} 
+
+}
+
+\textbf{Figure }{\textbf{1:} \hypertarget{fig1}{}A simulation overview is returned in the R console when \texttt{verbose\ =\ TRUE}.}\label{fig:fig1}
+\end{figure}
+
+Note that automatic MCMC run length and convergence diagnostics are available from the \href{https://cran.r-project.org/web/packages/runjags/index.html}{\texttt{runjags}} package (Denwood \protect\hyperlink{ref-Denwood2016}{2016}), and can be invoked with \textcolor{codecolor}{\texttt{\hl{mcmc.auto = TRUE}}}. This kind of adaptive approach can be helpful here as convergence tends to be slower with increasing errors in dose measurements, such that setting a constant chain length would not guarantee convergence in all simulations (and/or be inefficient). However, in our experience, timeout issues can occur with \textcolor{codecolor}{\texttt{\hl{mcmc.auto = TRUE}}} when the number of combinations of \textcolor{codecolor}{\texttt{\hl{n.whales}}} x \textcolor{codecolor}{\texttt{\hl{uncertainty.dose/prop.sat}}} x \textcolor{codecolor}{\texttt{\hl{n.sim}}} is large. One solution is to loop through simulations for each individual pair of \textcolor{codecolor}{\texttt{\hl{n.whales}}} x \textcolor{codecolor}{\texttt{\hl{uncertainty.dose/prop.sat}}} separately. The results can then be compiled using the \textcolor{codecolor}{\texttt{\hl{compile\_sim()}}} function (\hyperlink{compilelink}{see section 2.3}).
+
+\begin{itemize}
+\item
+  \textbf{Step 3: Post-processing and compiling.} This is largely convenience code used to extract and format MCMC outputs. Note that in order to circumvent memory problems during subsequent calculations (particularly when running long chains and a large number of simulations), the final posterior samples are obtained from an additional update of the Markov chains after convergence (using \textcolor{codecolor}{\texttt{\hl{mcmc.n}}} iterations).
+\item
+  \textbf{Step 4: Effective response range.} Next, the code produces posterior estimates of the effective response range (or effective response radius, ERR). The ERR is a novel metric that combines information on animal distribution, dose-response relationships, sound source levels, and models of acoustic propagation, to produce more robust and accurate estimates of impact (Tyack and Thomas \protect\hyperlink{ref-Tyack2019}{2019}). See \hyperlink{err}{section 2.3} for more details.
+\item
+  \textbf{Step 5: Dose-response curves.} Similarly, dose-response curves are computed for each simulation from pairs of posterior estimates of \(\mu\) and \(\omega\) (or \(\phi\) and \(\sigma\)). Summary statistics (i.e.~median, quantiles) are saved and will be used for plotting using \textcolor{codecolor}{\texttt{\hl{plot\_doseresponse()}}}.
+\item
+  \textbf{Step 6: Effective sample sizes and autocorrelation.} MCMC samples must be representative of the posterior distribution, however most MCMC chains exhibit some level of autocorrelation, such that successive steps in the chains are not independent. This section uses the \textcolor{codecolor}{\texttt{\hl{effectiveSize()}}} and the \textcolor{codecolor}{\texttt{\hl{autocorr.diag()}}} functions from the \href{https://cran.r-project.org/web/packages/coda/index.html}{\texttt{coda}} package (Plummer \emph{et al.} \protect\hyperlink{ref-Plummer2019b}{2019}) to assess chain autocorrelation and calculate effective sample sizes (ESS) as a metric of chain length for each parameter (Kruschke \protect\hyperlink{ref-Kruschke2010}{2015}). The mean ESS for each combination of \textcolor{codecolor}{\texttt{\hl{n.whales}}} x \textcolor{codecolor}{\texttt{\hl{uncertainty.dose}}} or \textcolor{codecolor}{\texttt{\hl{n.whales}}} x \textcolor{codecolor}{\texttt{\hl{prop.sat}}} (across all simulations) is calculated, and a warning issued if resulting values are inferior to \textcolor{codecolor}{\texttt{\hl{min.ESS}}}. Kruschke (\protect\hyperlink{ref-Kruschke2010}{2015}) recommends a heuristic threshold of \textcolor{codecolor}{\texttt{\hl{ESS = 10,000}}} for achieving numerically stable estimates. However, it may be computationally inefficient to run chains for that long, and \textcolor{codecolor}{\texttt{\hl{min.ESS}}} thus defaults to \textcolor{codecolor}{\texttt{\hl{1,000}}}. Similarly, a warning is returned if the mean correlation coefficient for any combination of \textcolor{codecolor}{\texttt{\hl{n.whales}}} x \textcolor{codecolor}{\texttt{\hl{uncertainty.dose}}} (or x \textcolor{codecolor}{\texttt{\hl{prop.sat}}}) x lag \textgreater{} \textcolor{codecolor}{\texttt{\hl{0.2}}}.
+\item
+  \textbf{Step 7: Convergence diagnostics.} The code performs both numerical and visual convergence checks (Figure \hyperlink{fig2}{2}), in the form of trace plots (saved to disk) and Gelman-Rubin statistics, respectively. The latter, denoted \textcolor{codecolor}{\texttt{\hl{Rhat}}}, compares the between-chain variance to the within-chain variance and is generally taken to indicate successful convergence when \textcolor{codecolor}{\texttt{\hl{Rhat < 1.1}}}. For a more conservative assessment, the default value of \textcolor{codecolor}{\texttt{\hl{Rhat}}} is set to \textcolor{codecolor}{\texttt{\hl{mcmc.gelmanrubin = 1.05}}}. Trace plots are produced using the \textcolor{codecolor}{\texttt{\hl{mcmc\_trace()}}} function from the \href{https://cran.r-project.org/web/packages/bayesplot/index.html}{\texttt{bayesplot}} package (Gabry and Mahr \protect\hyperlink{ref-Gabry2019}{2019}) and \textcolor{codecolor}{\texttt{\hl{Rhat}}} values obtained using the \textcolor{codecolor}{\texttt{\hl{gelman.diag()}}} function from the \href{https://cran.r-project.org/web/packages/coda/index.html}{\texttt{coda}} package (Plummer \emph{et al.} \protect\hyperlink{ref-Plummer2019b}{2019}).
+\item
+  \textbf{Step 8: Posterior predictive checks.} Two types of additional checks are considered next, namely: (1) the posterior prior overlap (PPO), and (2) posterior predictive checks (PPC) (Figure \hyperlink{fig2}{2}). Checking the PPO has particular utility when trying to determine if the parameters in a model are identifiable. If substantial PPO exists, the prior may simply be dictating the posterior distribution, and the data may thus have little influence on the results. By contrast, if a small degree of PPO exists, the data are informative enough to overcome the influence of the prior. In the field of ecology, nonidentifiability is a particular concern in some types of mark-recapture models. Gimenez \emph{et al.} (\protect\hyperlink{ref-Gimenez2009}{2009}) suggest that a PPO \textgreater{} 35\% indicates weak identifiability. PPCs simulate replicated data under the fitted model and then compare these to the observed data. PPCs are useful for determining whether a model gives ``valid'' predictions about the reality - i.e.~whether predictions are consistent with observed data. PPOs are computed using the \textcolor{codecolor}{\texttt{\hl{MCMCtrace()}}} function from the \href{https://cran.r-project.org/web/packages/MCMCvis/index.html}{\texttt{MCMCvis}} package (Youngflesh \protect\hyperlink{ref-Youngflesh2018}{2018}) and a warning issued if the PPO for any simulation is less than 0.35. PPC plots (saved to disk) are generated using the \textcolor{codecolor}{\texttt{\hl{ppc\_densoverlay()}}} function, which is adapted from \textcolor{codecolor}{\texttt{\hl{ppc\_dens\_overlay()}}} from the \href{https://cran.r-project.org/web/packages/bayesplot/index.html}{\texttt{bayesplot}} package (Gabry and Mahr \protect\hyperlink{ref-Gabry2019}{2019}).
+\item
+  \textbf{Step 9: Percent relative (median) bias.} This part of the code computes the percent relative (mean/median) bias for each simulation, as a measure of the average tendency of simulated values to depart from the true ones (for each parameter of interest). The mean bias is given as \textcolor{codecolor}{\texttt{\hl{(posterior mean - true value)/true value * 100}}}. The median bias is identical, but based on the posterior median rather than the posterior mean. It is defined as \textcolor{codecolor}{\texttt{\hl{(posterior median - true value)/true value * 100}}}.
+\item
+  \textbf{Step 10: Save outputs.} Lastly, all relevant outputs are saved to a list object. In addition, a summary of the simulation can be written to disk as a text file by setting \textcolor{codecolor}{\texttt{\hl{save.textsummary = TRUE}}}. Optionally, results can also be saved to disk using \textcolor{codecolor}{\texttt{\hl{save.results = TRUE}}}.
+\end{itemize}
+
+
+
+\begin{figure}
+
+{\centering \includegraphics[width=1\linewidth]{fig/fig_graphical_checks} 
+
+}
+
+\textbf{Figure }{\textbf{2:} \hypertarget{fig2}{}Example graphical model checks performed during simulations. \textbf{Left:} Trace plots used in assessing MCMC chain convergence. \textbf{Right:} posterior predictive plots comparing the distribution of observations simulated from the fitted model to that of the observed data.}\label{fig:unnamed-chunk-5}
+\end{figure}
+
+\subsection{Running simulations}
+
+\subsubsection{run\_scenario()}
+
+This is the core function used for running simulations using Markov Chain Monte Carlo (MCMC). Its arguments are listed below:
+
+\renewcommand{\arraystretch}{1.4}
+
+\begin{longtable}{>{\bfseries}l|>{\raggedright\arraybackslash}p{30em}}
+\toprule
+\textbf{Argument} & \textbf{Description}\\
+\midrule
+\endfirsthead
+\multicolumn{2}{@{}l}{\textit{(continued)}}\\
+\toprule
+\textbf{Argument} & \textbf{Description}\\
+\midrule
+\endhead
+\
+\endfoot
+\bottomrule
+\endlastfoot
+scenario & Scenario ID. Must be an integer between 1 and 4.\\
+n.sim & Integer. Number of simulations to run.\\
+n.whales & Integer. Number of whales. Can be supplied as a single value or vector of integers, which will be assessed iteratively.\\
+n.trials.per.whale & Integer. Number of exposure sessions per animal.\\
+uncertainty.dose & Uncertainty in acoustic dose, expressed as a standard deviation in received sound levels (in dB). Can be supplied as a single value, or vector of integers, which will be assessed iteratively. Relevant only to scenarios 1 and 2.\\
+\addlinespace
+prop.sat & Proportion of animals fitted with satellite tags. Can be supplied as a single value, or vector of values between 0 and 100, which will be assessed iteratively. Relevant only to scenarios 3 and 4.\\
+dtag.sd & Uncertainty in dose measurements made on DTAGs within scenarios 3 and 4, expressed as a standard deviation in received sound levels (in dB). Defaults to 2.5 dB.\\
+source.level & Source level of the sonar. Defaults to 210 dB re 1μPa m at a nominal frequency of 3 kHz, as per Tyack \& Thomas (2019).\\
+species.argos & Cetacean species to simulate in scenarios 3 and 4. One of either 'Zc' for Cuvier's beaked whale (Ziphius cavirostris) or 'Gm' for short-finned pilot whale (Globicephala macrorhynchus). ARGOS ellipses are simulated for each species based on real data from tagged animals (courtesy of Rob Schick at Duke University).\\
+true.mu & True underlying mean response threshold for all whales. Follows a truncated Normal with lower and upper truncation points given by lower.bound and upper.bound.\\
+\addlinespace
+lower.bound & Lower bound for true.mu, i.e. minimum response threshold. Defaults to 60 dB, under the conservative assumption that any sound below this threshold will not be heard for a 'typical' odontocete above ambient noise (Schick et al. 2019).\\
+upper.bound & Upper bound for true.mu, i.e. threshold at which all whales are expected to respond. Defaults to 190 dB for a typical odontocete.\\
+true.omega & Combined (between and within-whale) variation (SD). Relevant to scenarios 1 and 3.\\
+omega.upper.bound & Upper bound for true.omega.\\
+true.phi & Between-whale variation (SD). Defaults to 20 dB. Relevant to scenarios 2 and 4.\\
+\addlinespace
+phi.upper.bound & Upper bound for true.phi.\\
+true.sigma & Within-whale variation (SD). Relevant to scenarios 2 and 4.\\
+sigma.upper.bound & Upper bound for true.sigma.\\
+true.alpha & Parameter representing the effect of previous exposure to sonar on the animals' response threshold. Follows a Normal distribution with standard deviation given by alpha.sd.\\
+alpha.sd & Standard deviation of the exposure effect (true.alpha).\\
+\addlinespace
+true.beta & Parameter governing the effect of MFAS (Mid-frequency active sonar) relative to LFAS (Low-frequency active sonar) on the animals' response threshold. Follows a Normal distribution with standard deviation given by beta.sd.\\
+beta.sd & Standard deviation of the MFAS effect (true.beta).\\
+censor.right & Right-censoring range. Must be a vector of two values representing the lower and upper bounds, respectively. In each simulation, a value is drawn from a Uniform distribution bounded by this range, and any observation above this threshold is set to NA.\\
+burn.in & Number of Markov Chain Monte Carlo (MCMC) iterations required to achieve chain convergence. These will be discarded (burn-in). When mcmc.auto is set to \{TRUE, an initial burn-in of 5,000 is applied, and the autorun.jags function triggered, ensuring that all chains converge before they are returned.\\
+mcmc.adapt & Number of iterations used for adaptation. When a JAGS model is compiled, it may require an initial sampling phase during which the samplers adapt their behaviour to maximize their efficiency (e.g. a Metropolis-Hastings random walk algorithm may change its step size). The sequence of samples generated during this adaptive phase is not a Markov chain, and therefore may not be used for posterior inference on the model.\\
+\addlinespace
+mcmc.chains & Number of MCMC chains. Defaults to 3.\\
+mcmc.thin & Thinning rate. Thinning is used to reduce autocorrelation in the MCMC posterior sample, by only retaining every mcmc.thin\textasciicircum{}\{th\} value.\\
+mcmc.n & Integer. Number of MCMC samples extracted after convergence.\\
+mcmc.auto & Logical. Run the MCMC model in JAGS with automatically run length and convergence diagnostics, using the runjags package.\\
+mcmc.gelmanrubin & Threshold for assessing chain convergence according to the Gelman-Rubin statistic. Defaults to 1.1.\\
+\addlinespace
+mcmc.save & Logical. Whether to save MCMC samples to disk (in .rds format). Warning: Setting this argument to TRUE may result in large output files, if a high number of simulations is required.\\
+animal.density & Number of whales per square km. Used in the calculation of the effective response range (ERR). Defaults to 1.\\
+n.bins & Number of bins used in the calculation of the effective response range (ERR). Defaults to 500.\\
+check.convergence & Logical. Whether to perform convergence checks on MCMC chains, including calculating values of the Gelman-Rubin statistic and producing trace plots. Defaults to TRUE.\\
+gr.multivariate & Logical. If TRUE, the multivariate Gelman-Rubin statistic is returned.\\
+\addlinespace
+posterior.checks & Logical. Whether to perform posterior checks, including PPO: Prior posterior overlap; PPC: Posterior predictive checks. Defaults to TRUE.\\
+min.ESS & Minimum effective sample size (ESS) considered to be acceptable. A warning will be issued if this value is not attained for each parameter. Defaults to 1000.\\
+correlation.threshold & Threshold for assessing MCMC chain correlation. If this value is exceeded for any lag, a warning will be triggered.\\
+save.trace & Logical. Whether to save a subset of trace plots to disk.\\
+no.tracePlots & Integer between 1 and 5. Number of simulations (chosen at random) for which to produce trace plots when check.convergence is TRUE.\\
+\addlinespace
+n.yrep & Number of replicate datasets to generate for posterior predictive checking (posterior.checks = TRUE).\\
+hdi.value & Probability mass to include in credible intervals derived as highest density intervals. Must be a number between 0 and 1. Defaults to 0.95 for a 95\% HDI.\\
+verbose & Logical. Whether to prints an overview of simulation parameters/steps to the R console during execution. Defaults to TRUE.\\
+parallel.cores & Integer. Number of cores to use when computations are run in parallel. Default is 1 for single core computing.\\
+record.time & Logical. Whether to time the simulations. Defaults to TRUE.\\
+\addlinespace
+save.textsummary & Logical. If TRUE, a text-based summary of simulation parameters will be saved on disk.\\
+save.results & Logical. Whether to save the simulations outputs as an .RData file on disk. Defaults to TRUE.\\*
+\end{longtable}
+
+\pagebreak
+\subsection{Visualising outputs}
+
+The following functions are available for visualising and summarising simulation results.
+
+\subsubsection{plot\_results()}
+
+This function produces forest plots (Figure \hyperlink{fig3}{3}) showing the average (i) posterior median and (ii) credible interval bounds for parameters of interest across simulation runs. A bivariate colour legend is used to characterise combinations of \textcolor{codecolor}{\texttt{\hl{n.whales}}} x \textcolor{codecolor}{\texttt{\hl{uncertainty.dose}}} or \textcolor{codecolor}{\texttt{\hl{n.whales}}} x \textcolor{codecolor}{\texttt{\hl{prop.sat}}}, depending on the scenario considered and as defined in \textcolor{codecolor}{\texttt{\hl{run\_scenario()}}}. Each sample size is given a hue along the \textcolor{codecolor}{\texttt{\hl{viridis}}} colour scale, and each measurement error/tag ratio is given a different shade, with lower values shown in lighter tones, and higher values in darker tones. In addition, heat maps (coloured grids) are produced to show patterns in the average (i) credible interval width (in dB re 1\(\mu\)Pa or km, as appropriate), (ii) percent relative bias, and (iii) prior posterior overlap (PPO) for each combination of sample size and error/tag ratio, for a given parameter. These plots are saved both individually and in a combined PDF on disk.
+
+
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.8\linewidth]{fig/fig_forestplot_mu} 
+
+}
+
+\textbf{Figure }{\textbf{3:} \hypertarget{fig3}{}Example forest plot produced by the \texttt{plot\_results()} function for the mean response threshold across all whales, \(\mu\), under scenario 1.}\label{fig:unnamed-chunk-7}
+\end{figure}
+
+\renewcommand{\arraystretch}{1.4}
+
+\begin{longtable}{>{\bfseries}l|>{\raggedright\arraybackslash}p{30em}}
+\toprule
+\textbf{Argument} & \textbf{Description}\\
+\midrule
+mcmc.object & List object containing simulation outputs, as returned by simulate\_scenario().\\
+layout.ncol & Number of columns used in the final plot layout. Must be an integer between 1 and 3.\\
+pars.to.plot & Parameter(s) of interest. By default, the function will produce plots for every monitored parameter (param = NULL).\\
+summary.method & Character vector. One of 'mean' or 'median'. Whether to calculate the average or median value of posterior statistics across simulations.\\
+start.shade & Number between 0 and 1 indicating the shade of the lightest to use on the Y-axis. Higher values indicate darker shades. Defaults to 0.2.\\
+\addlinespace
+n.cols & Integer. Minimum number of colours used to define the colour palettes of the heat plots.\\
+darken.bars & Logical. Whether to add dark lines to the plot to enhance the legibility of the lightest colours. Defaults to FALSE.\\
+save.to.disk & Logical. Whether to save the plots to disk. Defaults to FALSE.\\
+output.format & Output file type. Defaults to 'pdf'.\\
+\bottomrule
+\end{longtable}
+
+\subsubsection{plot\_doseresponse()}
+
+This function generates dose-response plots such as those presented in Miller \emph{et al.} (\protect\hyperlink{ref-Miller2014}{2014}) and Harris \emph{et al.} (\protect\hyperlink{ref-Harris2018}{2018}) (Figure \hyperlink{fig4}{4}). By default, one plot is produced per combination of \textcolor{codecolor}{\texttt{\hl{n.whales}}} x \textcolor{codecolor}{\texttt{\hl{uncertainty.dose}}} or \textcolor{codecolor}{\texttt{\hl{n.whales}}} x \textcolor{codecolor}{\texttt{\hl{prop.sat}}}, however various parameters are available to select combinations of interest and modify the layout of the output file.
+
+\renewcommand{\arraystretch}{1.4}
+
+\begin{longtable}{>{\bfseries}l|>{\raggedright\arraybackslash}p{30em}}
+\toprule
+\textbf{Argument} & \textbf{Description}\\
+\midrule
+mcmc.object & List object containing simulation outputs, as returned by simulate\_scenario().\\
+select.n & Subset of sample sizes to display. All values are shown when set to NULL (the default).\\
+select.obs & Subset of values to display for the observation model parameter (i.e. uncertainty.dose in scenarios 1 and 2, prop.sat in scenarios 3 and 4). All values are shown when set to NULL (the default).\\
+concatenate & Logical. By default, plots for each sample size are saved on separate pages when output to PDF, which can result in unnecessary empty space depending on the type of layout chosen (n.row x n.col). Set this argument to TRUE to combine plots across a minimum number of pages.\\
+n.row & Number of rows used in the plot layout. Values greater than 1 (default) allow multiple plots to be arranged in the same plotting space.\\
+\addlinespace
+n.col & Number of columns used in the plot layout. Values greater than 1 (default) allow multiple plots to be arranged in the same plotting space.\\
+save.to.disk & Logical. Whether to save the plots to disk. Defaults to FALSE.\\
+output.format & Output file type. Defaults to 'pdf'.\\
+plot.width & Width of the output plot (in pixels).\\
+plot.height & Height of the output plot (in pixels).\\
+\addlinespace
+plot.res & Resolution of the output plot (in dpi).\\
+\bottomrule
+\end{longtable}
+
+
+
+\begin{figure}
+
+{\centering \includegraphics[width=1\linewidth]{fig/fig_doseresponse_plots} 
+
+}
+
+\textbf{Figure }{\textbf{4:} \hypertarget{fig4}{}Example dose-response curves produced by the \texttt{plot\_doseresponse()} function.}\label{fig:unnamed-chunk-10}
+\end{figure}
+
+\subsection{Convenience functions}
+
+\subsubsection{extra\_sim()}
+
+This function can be called to run additional simulations, for combinations of \textcolor{codecolor}{\texttt{\hl{n.whales}}} x \textcolor{codecolor}{\texttt{\hl{uncertainty.dose}}} or \textcolor{codecolor}{\texttt{\hl{n.whales}}} x \textcolor{codecolor}{\texttt{\hl{prop.sat}}} in which not all MCMC chains converged for all parameters. A tally of convergence failures is saved by default in the output from \textcolor{codecolor}{\texttt{\hl{run\_scenario()}}} under \textcolor{codecolor}{\texttt{\hl{\$convergence}}}. The function launches an internal call to \textcolor{codecolor}{\texttt{\hl{run\_scenario()}}} with \textcolor{codecolor}{\texttt{\hl{mcmc.auto}}} set to \textcolor{codecolor}{\texttt{\hl{TRUE}}}, such that posterior samples are automatically returned after convergence has been achieved. The \textcolor{codecolor}{\texttt{\hl{replace.sims}}} argument allows users to update the simulation results as appropriate (see Figure \hyperlink{fig5}{5}).
+
+\renewcommand{\arraystretch}{1.4}
+
+\begin{longtable}{>{\bfseries}l|>{\raggedright\arraybackslash}p{30em}}
+\toprule
+\textbf{Argument} & \textbf{Description}\\
+\midrule
+mcmc.object & List object containing simulation outputs, as returned by simulate\_scenario().\\
+replace.sims & Logical. If FALSE, the function only returns the output of run\_scenario() for the combinations of n.whales x uncertainty.dose/prop.sat for which convergence was not achieved. If TRUE, the entire mcmc.object is updated with the new results (i.e. including posterior values, summaries, etc).\\
+update.dr & Logical. If TRUE, dose-response curves are also updated. Note: This requires MCMC sample objects to have been saved on disk (mcmc.save = TRUE in run\_scenario()).\\
+\bottomrule
+\end{longtable}
+
+
+
+\begin{figure}
+
+{\centering \includegraphics[width=0.9\linewidth]{fig/fig_convergence_comparison} 
+
+}
+
+\textbf{Figure }{\textbf{5:} \hypertarget{fig5}{}Dose-response curves obtained before and after updates from the \texttt{extra\_sim()} function. \textbf{(A)} Curves derived from simulations in which MCMC chains did not converge for all parameters. \textbf{(B)} The same data, after the relevant simulations were corrected to achieved convergence.}\label{fig:unnamed-chunk-12}
+\end{figure}
+
+\hypertarget{err}{}
+\subsubsection{effective\_range()}
+
+This function is called by \textcolor{codecolor}{\texttt{\hl{run\_scenario()}}} to calculate the effective response range (or effective response radius, ERR), a novel metric that combines information on animal distribution, dose-response relationships, sound source levels, and models of acoustic propagation, to produce more robust and accurate estimates of impact (Tyack and Thomas \protect\hyperlink{ref-Tyack2019}{2019}). By default, the function assumes a simple inverse-squared circular transmission loss model, and performs calculations over a maximum range given by the distance at which received levels drops below \textcolor{codecolor}{\texttt{\hl{lower.bound}}} (i.e.~such that the probability of response is zero).
+
+\renewcommand{\arraystretch}{1.4}
+
+\begin{longtable}{>{\bfseries}l|>{\raggedright\arraybackslash}p{30em}}
+\toprule
+\textbf{Argument} & \textbf{Description}\\
+\midrule
+response.threshold & Mean response threshold (received sound level at which a response is trigerred), in dB re 1uPa rms.\\
+response.sd & Uncertainty around the response threshold, expressed as a standard deviation of response.threshold.\\
+response.lowerbound & Received level below which no animals respond, in dB re 1uPa rms.\\
+response.upperbound & Received level at which all animals are expected to exhibit a response, in dB re 1uPa rms.\\
+received.level & Received levels, reflecting a given source level and transmission loss model.\\
+\addlinespace
+D & Animal density. Defaults to 1 animal per km2, as per the example presented in Tyack \& Thomas (2019).\\
+n.bins & Number of bins with which to divide the maximum.rge. The number of whales showing a response is evaluated in each bin.\\
+absorption.loss & Maximum range for sound propagation (km).\\
+\bottomrule
+\end{longtable}
+
+\hypertarget{xy}{}
+\subsubsection{xy\_error()}
+
+This function calculates the uncertainty (SD) in the acoustic dose received by animals fitted with satellite tags, whilst accounting for positional uncertainty on a 2D plane. This is done by simulating candidate ARGOS (x,y) locations within plausible error ellipses around position estimates for a given received level, assuming a simple inverse-squared spherical transmission loss model. See Bouchet \emph{et al.} (\protect\hyperlink{ref-Bouchet2020a}{2020}) for details.
+
+\renewcommand{\arraystretch}{1.4}
+\begin{table}[H]
+\centering
+\begin{tabular}{>{\bfseries}l|>{\raggedright\arraybackslash}p{30em}}
+\toprule
+\textbf{Argument} & \textbf{Description}\\
+\midrule
+argos.data & Input ARGOS data.\\
+received.lvl & Received level.\\
+source.lvl & Sound pressure level of the noise source.\\
+multi & Logical. If TRUE, repeat the estimation for multiple ellipses.\\
+n.ellipses & Number of ellipses to simulate when multi = TRUE.\\
+\addlinespace
+plot.ellipse & Logical. If TRUE, create plot a random realisation of the bivariate normal from which simulated errors are drawn.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{run\_argos\_example()}
+
+This function is used to produce Figure 16 in the accomnpanying technical report (Bouchet \emph{et al.} \protect\hyperlink{ref-Bouchet2020a}{2020}). It simulates animals at incremental distances from the sonar source and computes the variation in received levels experienced by these animals, accounting for variable positional error from Argos-linked satellite tags.
+
+\renewcommand{\arraystretch}{1.4}
+
+\begin{table}[H]
+\centering
+\begin{tabular}{>{\bfseries}l|>{\raggedright\arraybackslash}p{30em}}
+\toprule
+\textbf{Argument} & \textbf{Description}\\
+\midrule
+N & Number of simulated animals.\\
+range.min & Minimum distance from the noise source.\\
+range.max & Maximum distance from the noise source.\\
+range.increment & Increments by which to divide the range.\\
+source.lvl & Level of the noise source.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{load\_sim() and compile\_sim()}
+
+\hypertarget{compilelink}{}
+
+These two functions are used to load the results from a single simulation run (provided they have been saved to disk), and compile the results from multiple simulation runs, respectively. The latter is useful when multiple combinations of \textcolor{codecolor}{\texttt{\hl{n.whales}}} x \textcolor{codecolor}{\texttt{\hl{uncertainty.dose}}} or \textcolor{codecolor}{\texttt{\hl{n.whales}}} x \textcolor{codecolor}{\texttt{\hl{prop.sat}}} have been run separately, and need to be collated.
+
+\renewcommand{\arraystretch}{1.4}
+\begin{table}[H]
+\centering
+\begin{tabular}{>{\bfseries}l|>{\raggedright\arraybackslash}p{30em}}
+\toprule
+\textbf{Argument} & \textbf{Description}\\
+\midrule
+scenario & Scenario ID.\\
+index & Simulation index ID.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{hexa2hex()}
+
+This function returns the HEX colour code equivalent to an input colour subjected to a given level of transparency.
+This is useful for emulating different opacity levels for overlapping plot elements without actually making them transparent. \textcolor{codecolor}{\texttt{\hl{hexa2hex()}}} is called internally by \textcolor{codecolor}{\texttt{\hl{plot\_results()}}}.
+
+\renewcommand{\arraystretch}{1.4}
+\begin{table}[H]
+\centering
+\begin{tabular}{>{\bfseries}l|>{\raggedright\arraybackslash}p{30em}}
+\toprule
+\textbf{Argument} & \textbf{Description}\\
+\midrule
+input.colour & Initial colour.\\
+opacity & Desired level of transparency. Must be a number between 0 and 1, with higher values representing more opaque colours.\\
+bg.colour & Colour of the background. Defaults to 'white'.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{addlzero() and removelzero()}
+
+These are convenience functions for adding and removing leading zeroes, respectively. They are used to ensure that combinations of \textcolor{codecolor}{\texttt{\hl{n.whales}}} x \textcolor{codecolor}{\texttt{\hl{uncertainty.dose}}} or \textcolor{codecolor}{\texttt{\hl{n.whales}}} x \textcolor{codecolor}{\texttt{\hl{prop.sat}}}, as specified in \textcolor{codecolor}{\texttt{\hl{run\_scenario()}}}, are ordered correctly when plotted or summarised.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# Quick example}
+\KeywordTok{addlzero}\NormalTok{(}\DecValTok{5}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] "005"
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{removelzero}\NormalTok{(}\DecValTok{025}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##      
+## "25"
+\end{verbatim}
+
+\subsubsection{start\_cluster() and stop\_cluster()}
+
+These two functions are shorthands for launching and stopping parallel clusters, respectively. The only argument to \textcolor{codecolor}{\texttt{\hl{start\_cluster()}}} is \textcolor{codecolor}{\texttt{\hl{n.cores}}}, indicating the number of cores required for parallel processing.
+
+\subsubsection{nth\_element()}
+
+This function is used to extract the n\textsuperscript{th} element from a vector, based on a chosen start position.
+
+\renewcommand{\arraystretch}{1.4}
+\begin{table}[H]
+\centering
+\begin{tabular}{>{\bfseries}l|>{\raggedright\arraybackslash}p{30em}}
+\toprule
+\textbf{Argument} & \textbf{Description}\\
+\midrule
+vector & Input vector.\\
+starting.position & Starting position.\\
+n & Integer. Sampling interval.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{TL()}
+
+This function returns the transmission loss for a given range, assuming a simple inverse-square transmission loss model. \textbf{Note:} This is how much is lost, \textbf{NOT} the sound level after loss.
+
+\renewcommand{\arraystretch}{1.4}
+\begin{table}[H]
+\centering
+\begin{tabular}{>{\bfseries}l|>{\raggedright\arraybackslash}p{30em}}
+\toprule
+\textbf{Argument} & \textbf{Description}\\
+\midrule
+rge & Range in km.\\
+a & Sound absorption coefficient, in dB per km. This is frequency-dependent, and takes a value of 0.185 for a 3 kHz signal under normal sea conditions.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{range\_finder()}
+
+This function returns the range corresponding to a given received level, assuming a simple inverse-square transmission loss model.
+
+\renewcommand{\arraystretch}{1.4}
+\begin{table}[H]
+\centering
+\begin{tabular}{>{\bfseries}l|>{\raggedright\arraybackslash}p{30em}}
+\toprule
+\textbf{Argument} & \textbf{Description}\\
+\midrule
+rge & Range in km.\\
+SL & Sound pressure level of the noise source.\\
+target.L & Target noise level for which a range must be estimated.\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{removelabels()}
+
+This is a simple convenience function for removing appropriate labels in a tibble.
+
+\subsubsection{name\_list()}
+
+The simulation code returns lists of MCMC objects. This function is used to assign appropriate names to each list element.
+
+\renewcommand{\arraystretch}{1.4}
+\begin{table}[H]
+\centering
+\begin{tabular}{>{\bfseries}l|>{\raggedright\arraybackslash}p{30em}}
+\toprule
+\textbf{Argument} & \textbf{Description}\\
+\midrule
+scenario.id & Scenario ID.\\
+input.list & Input list.\\
+Nwhales & Number of whales. Corresponds to n.whales in run\_scenario().\\
+Nsim & Number of simulations. Corresponds to n.sim in run\_scenario().\\
+dose.or.ratio & Values of the observation model parameter (i.e. uncertainty.dose in scenarios 1+2 or prop.sat in scenarios 3+4).\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsubsection{ppc.dens.overlay()}
+
+This function is a modified version of the \textcolor{codecolor}{\texttt{\hl{ppc\_dens\_overlay()}}} function from the \href{https://cran.r-project.org/web/packages/bayesplot/index.html}{\texttt{bayesplot}} package (Gabry and Mahr \protect\hyperlink{ref-Gabry2019}{2019}), which does \textbf{not} return an error when performing graphical posterior predictive checks from posterior samples containing NAs. This is necessary, as the observation model we are using entails a right-censoring component (and therefore generates some NA values). The function is called internally during simulations.
+
+\newpage
+\section{References}
+
+\hypertarget{refs}{}
+\leavevmode\hypertarget{ref-Bouchet2020a}{}%
+Bouchet PJ, Harris CM, Thomas L (2020). Simulating cetacean responses to sonar exposure within a Bayesian hierarchical modelling framework: Technical report. University of St Andrews; Double MOCHA Report, 39 p.
+
+\leavevmode\hypertarget{ref-Denwood2016}{}%
+Denwood MJ (2016). runjags: An R package providing interface utilities, model templates, parallel computing methods and additional distributions for MCMC models in JAGS. \emph{Journal of Statistical Software} \textbf{71}, 1--25. DOI: \href{https://doi.org/10.18637/jss.v071.i09}{10.18637/jss.v071.i09}
+
+\leavevmode\hypertarget{ref-Gabry2019}{}%
+Gabry J, Mahr T (2019). Bayesplot: Plotting for bayesian models. R package version 1.7.0. Available at: \url{https://cran.r-project.org/web/packages/bayesplot/index.html}
+
+\leavevmode\hypertarget{ref-Gimenez2009}{}%
+Gimenez O, Morgan BJT, Brooks SP (2009). Weak identifiability in models for mark-recapture-recovery data. \emph{In}: `Modeling demographic processes in marked populations', pp. 1055--1067 (Eds D. L. Thomson, E. G. Cooch, and M. J. Conroy). Springer US. DOI: \href{https://doi.org/10.1007/978-0-387-78151-8_48}{10.1007/978-0-387-78151-8\_48}
+
+\leavevmode\hypertarget{ref-Harris2018}{}%
+Harris CM, Thomas L, Falcone EA, Hildebrand J, Houser D, Kvadsheim PH, Lam F-PA, Miller PJO, Moretti DJ, Read AJ, Slabbekoorn H, Southall BL, Tyack PL, Wartzok D, Janik VM (2018). Marine mammals and sonar: Dose-response studies, the risk-disturbance hypothesis and the role of exposure context. \emph{Journal of Applied Ecology} \textbf{55}, 396--404. DOI: \href{https://doi.org/10.1111/1365-2664.12955}{10.1111/1365-2664.12955}
+
+\leavevmode\hypertarget{ref-Joyce2020}{}%
+Joyce TW, Durban JW, Claridge DE, Dunn CA, Hickmott LS, Fearnbach H, Dolan K, Moretti D (2020). Behavioral responses of satellite tracked Blainville's beaked whales (\emph{Mesoplodon densirostris}) to mid-frequency active sonar. \emph{Marine Mammal Science} \textbf{36}, 29--46. DOI: \href{https://doi.org/10.1111/mms.12624}{10.1111/mms.12624}
+
+\leavevmode\hypertarget{ref-Kruschke2010}{}%
+Kruschke JK (2015). Doing Bayesian Data Analysis: A Tutorial with R and BUGS 2nd ed. Academic Press, Oxford, 759 p.
+
+\leavevmode\hypertarget{ref-Miller2014}{}%
+Miller PJO, Antunes RN, Wensveen PJ, Samarra FIP, Alves AC, Tyack PL, Kvadsheim PH, Kleivane L, Lam F-PA, Ainslie MA, Thomas L (2014). Dose-response relationships for the onset of avoidance of sonar by free-ranging killer whales. \emph{Journal of the Acoustical Society of America} \textbf{135}, 975--993. DOI: \href{https://doi.org/10.1121/1.4861346}{10.1121/1.4861346}
+
+\leavevmode\hypertarget{ref-Plummer2019}{}%
+Plummer M (2019). Rjags: Bayesian graphical models using mcmc. R package version 4-9. Available at: \url{https://CRAN.R-project.org/package=rjags}
+
+\leavevmode\hypertarget{ref-Plummer2019b}{}%
+Plummer M, Best N, Cowles K, Vines K (2019). CODA: Convergence diagnosis and output analysis for mcmc. R package version 19-3. Available at: \url{https://cran.r-project.org/web/packages/coda/index.html}
+
+\leavevmode\hypertarget{ref-Rinker2018}{}%
+Rinker TW, Kurkiewicz D (2018). pacman: Package management for R. R package version 0.5.0. Available at: \url{http://github.com/trinker/pacman}
+
+\leavevmode\hypertarget{ref-Schick2019}{}%
+Schick RS, Bowers M, DeRuiter S, Friedlaender A, Joseph J, Margolina T, Nowacek DP, Southall BL (2019). Accounting for positional uncertainty when modeling received levels for tagged cetaceans exposed to sonar. \emph{Aquatic Mammals} \textbf{45}, 675--690. DOI: \href{https://doi.org/10.1578/AM.45.6.2019.675}{10.1578/AM.45.6.2019.675}
+
+\leavevmode\hypertarget{ref-Tyack2019}{}%
+Tyack PL, Thomas L (2019). Using dose--response functions to improve calculations of the impact of anthropogenic noise. \emph{Aquatic Conservation: Marine and Freshwater Ecosystems} \textbf{29}, 242--253. DOI: \href{https://doi.org/10.1002/aqc.3149}{10.1002/aqc.3149}
+
+\leavevmode\hypertarget{ref-Youngflesh2018}{}%
+Youngflesh C (2018). MCMCvis: Tools to visualize, manipulate, and summarize mcmc output. \emph{Journal of Open Source Software} \textbf{3}, 640. DOI: \href{https://doi.org/10.21105/joss.00640}{10.21105/joss.00640}
+
+\end{document}

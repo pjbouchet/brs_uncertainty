@@ -1,0 +1,53 @@
+model{
+  
+  # ------------------------------
+  # Priors
+  # ------------------------------
+  
+  # Average whale response threshold
+  mu~dunif(lower.bound,upper.bound)
+  
+  # Between-whale variation (sd)
+  phi~dunif(0,phi.upper.bound)
+  inv_phi2<-pow(phi,-2)
+  
+  # Within-whale variation (sd)
+  sigma~dunif(0,sigma.upper.bound)
+  inv_sigma2<-pow(sigma,-2)
+  
+  # Coefficients for MFAS and previous exposure effects 
+  beta~dnorm(0,1/beta_priorsd^2)
+  alpha~dnorm(0,1/alpha_priorsd^2)
+  
+  # ------------------------------
+  # Process model
+  # ------------------------------
+
+  for(i in 1:n.whales){
+  
+    # Between whales
+    mu_i[i]~dnorm(mu, inv_phi2) T(lower.bound,upper.bound)
+  }
+  
+  for(j in 1:n.trials){ 
+   
+    # MFAS and previous exposure effects
+    mu_ij[j]<-mu_i[whale.id[j]] + alpha*I.exposed[j] - beta*I.mfas[j] + beta*I.lfas[j] 
+    
+   # Between trials, within whale  
+    t_ij[j]~dnorm(mu_ij[j], inv_sigma2) T(lower.bound,upper.bound) 
+  }
+
+  # ------------------------------
+  # Observation model
+  # ------------------------------
+  
+  for(k in 1:n.trials){
+    
+    y[k]~dnorm(t_ij[k],measurement.precision[k])
+    
+    # Right-censoring
+    I.censored[k]~dinterval(y[k],U[k])
+  }
+  
+}
