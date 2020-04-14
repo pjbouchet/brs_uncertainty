@@ -2655,6 +2655,8 @@ extra_sim <- function(mcmc.object, replace.sims = TRUE, update.dr = FALSE){
 plot_results <- function(mcmc.object, 
                          layout.ncol = 1,
                          pars.to.plot = NULL,
+                         select.n = NULL,
+                         select.obs = NULL,
                          summary.method = "mean",
                          start.shade = 0.2,
                          n.cols = 12,
@@ -2669,6 +2671,8 @@ plot_results <- function(mcmc.object,
   #' @param mcmc.object List. Output from the \code{run_scenario()} function.
   #' @param layout.ncol Integer between 1 and 3. Number of columns used in the final plot layout.
   #' @param pars.to.plot Parameter(s) of interest. By default, the function will produce plots for every monitored parameter (param = NULL). 
+  #' @param select.n Subset of sample sizes to display. All values are shown when set to NULL (the default). 
+  #' @param select.obs Subset of values to display for the observation model parameter (i.e. uncertainty.dose in scenarios 1 and 2, prop.sat in scenarios 3 and 4). All values are shown when set to NULL (the default). 
   #' @param summary.method Character vector. One of "mean" or "median. Whether to calculate the average or median value of posterior statistics across simulations.
   #' @param start.shade Number between 0 and 1 indicating the shade of the lightest to use on the Y-axis. Higher values indicate darker shades. Defaults to 0.2.
   #' @param n.cols Integer. Minimum number of colours used to define the colour palettes of the heat plots.
@@ -2739,12 +2743,26 @@ plot_results <- function(mcmc.object,
   
   scenario <- mcmc.object$params$scenario
   index <- mcmc.object$params$index
-  n.whales <- mcmc.object$params$n.whales
+
   n.sim <- mcmc.object$params$n.sim
   col_names <- mcmc.object$col_names
   if(is.null(pars.to.plot)) params.monitored <- mcmc.object$params$params.monitored else params.monitored <- pars.to.plot
-  if(scenario %in% c(1,2)) obs.param <- mcmc.object$params$uncertainty.dose
-  if(scenario %in% c(3,4)) obs.param <- mcmc.object$params$prop.sat
+  
+  #'--------------------------------------------------------------------
+  # Filter data where appropriate
+  #'--------------------------------------------------------------------
+  
+  if(!is.null(select.n)) n.whales <- select.n else n.whales <- mcmc.object$params$n.whales
+  
+  if(!is.null(select.obs)) {
+    obs.param <- select.obs
+  }else{
+    if(scenario %in% c(1,2)) obs.param <- mcmc.object$params$uncertainty.dose
+    if(scenario %in% c(3,4)) obs.param <- mcmc.object$params$prop.sat 
+  }
+  
+  mcmc.object$mcmc <- mcmc.object$mcmc %>% 
+    dplyr::filter(n %in% addlzero(n.whales), !!as.name(col_names[2]) %in% addlzero(obs.param))
   
   #'--------------------------------------------------------------------
   # Retrieve all combinations of n.whales x uncertainty.dose
@@ -3289,13 +3307,21 @@ plot_results <- function(mcmc.object,
     
     # Forest plots
     
+    if(length(n.whales) > 4) {
+      plot.height <- 11
+      plot.width <- 10
+      }else{
+        plot.height <- 6
+        plot.width <- 7
+      } 
+    
     purrr::walk(.x = params.monitored,
                 .f = ~ggplot2::ggsave(plot = combined.forest.plots[[.x]], 
                                       filename = paste0(getwd(), "/out/scenario_", scenario, "/S", scenario, 
                                                         "_forestplot_", .x, "_", index, 
                                                         ".", output.format), 
                                       device = output.format, 
-                                      height = 11, width = 10))
+                                      height = plot.height, width = plot.width))
     
     # Heat maps (combined)
     
@@ -3859,7 +3885,7 @@ run_argos_example <- function(N = 500,
   
 }
 
-run_argos_example(N = 2000)
+# run_argos_example(N = 2000)
 
 # ggplot2::ggsave(filename = "/Users/philippebouchet/Google Drive/Documents/postdoc/creem/dMOCHA/dose_response/simulation/dose_uncertainty/rmd/fig/fig_argos_sd.pdf", device = cairo_pdf, width = 8, height = 5)
 
