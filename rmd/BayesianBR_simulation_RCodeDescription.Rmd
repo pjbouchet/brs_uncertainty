@@ -286,10 +286,12 @@ knitr::include_graphics("fig/fig_forestplot_mu.png")
 \renewcommand{\arraystretch}{1.4}
 ```{r echo=FALSE}
 text_tbl <- data.frame(
-  Argument = c("mcmc.object","layout.ncol", "pars.to.plot", "summary.method", "start.shade", "n.cols", "darken.bars", "save.to.disk", "output.format"),
+  Argument = c("mcmc.object","layout.ncol", "pars.to.plot", "select.n", "select.obs", "summary.method", "start.shade", "n.cols", "darken.bars", "save.to.disk", "output.format"),
   Description = c("List object containing simulation outputs, as returned by simulate_scenario().",
                   "Number of columns used in the final plot layout. Must be an integer between 1 and 3.",
                   "Parameter(s) of interest. By default, the function will produce plots for every monitored parameter (param = NULL).",
+                      "Subset of sample sizes to display. All values are shown when set to NULL (the default).",
+    "Subset of values to display for the observation model parameter (i.e. uncertainty.dose in scenarios 1 and 2, prop.sat in scenarios 3 and 4). All values are shown when set to NULL (the default).",
                   "Character vector. One of 'mean' or 'median'. Whether to calculate the average or median value of posterior statistics across simulations.",
     "Number between 0 and 1 indicating the shade of the lightest to use on the Y-axis. Higher values indicate darker shades. Defaults to 0.2.",
      "Integer. Minimum number of colours used to define the colour palettes of the heat plots.",

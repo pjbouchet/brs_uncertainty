@@ -152,7 +152,7 @@
 \makeatother
 \subtitle{R code description}
 \author{Phil Bouchet, Catriona Harris, Len Thomas}
-\date{10 April, 2020}
+\date{14 April, 2020}
 
 \begin{document}
 \maketitle
@@ -422,12 +422,15 @@ This function produces forest plots (Figure \hyperlink{fig3}{3}) showing the ave
 mcmc.object & List object containing simulation outputs, as returned by simulate\_scenario().\\
 layout.ncol & Number of columns used in the final plot layout. Must be an integer between 1 and 3.\\
 pars.to.plot & Parameter(s) of interest. By default, the function will produce plots for every monitored parameter (param = NULL).\\
+select.n & Subset of sample sizes to display. All values are shown when set to NULL (the default).\\
+select.obs & Subset of values to display for the observation model parameter (i.e. uncertainty.dose in scenarios 1 and 2, prop.sat in scenarios 3 and 4). All values are shown when set to NULL (the default).\\
+\addlinespace
 summary.method & Character vector. One of 'mean' or 'median'. Whether to calculate the average or median value of posterior statistics across simulations.\\
 start.shade & Number between 0 and 1 indicating the shade of the lightest to use on the Y-axis. Higher values indicate darker shades. Defaults to 0.2.\\
-\addlinespace
 n.cols & Integer. Minimum number of colours used to define the colour palettes of the heat plots.\\
 darken.bars & Logical. Whether to add dark lines to the plot to enhance the legibility of the lightest colours. Defaults to FALSE.\\
 save.to.disk & Logical. Whether to save the plots to disk. Defaults to FALSE.\\
+\addlinespace
 output.format & Output file type. Defaults to 'pdf'.\\
 \bottomrule
 \end{longtable}
@@ -719,7 +722,7 @@ This function is a modified version of the \textcolor{codecolor}{\texttt{\hl{ppc
 
 \hypertarget{refs}{}
 \leavevmode\hypertarget{ref-Bouchet2020a}{}%
-Bouchet PJ, Harris CM, Thomas L (2020). Simulating cetacean responses to sonar exposure within a Bayesian hierarchical modelling framework: Technical report. University of St Andrews; Double MOCHA Report, 39 p.
+Bouchet PJ, Harris CM, Thomas L (2020). Simulating cetacean responses to sonar exposure within a Bayesian hierarchical modelling framework: Technical report. Double MOCHA Report, University of St Andrews, 39 p.
 
 \leavevmode\hypertarget{ref-Denwood2016}{}%
 Denwood MJ (2016). runjags: An R package providing interface utilities, model templates, parallel computing methods and additional distributions for MCMC models in JAGS. \emph{Journal of Statistical Software} \textbf{71}, 1--25. DOI: \href{https://doi.org/10.18637/jss.v071.i09}{10.18637/jss.v071.i09}
