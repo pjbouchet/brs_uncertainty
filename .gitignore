@@ -2,8 +2,7 @@
 _cache/
 _files/
 .tex
-.log
 example_convergence/
-.afdesign
+*.afdesign
 xy_error_example_A.pdf
 xy_error_example_B.pdf
