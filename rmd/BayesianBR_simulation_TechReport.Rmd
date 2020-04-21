@@ -279,7 +279,7 @@ knitr::include_graphics("fig/fig_doseresponse_S2.png")
 knitr::include_graphics("fig/fig_forestplot_S2.png")
 ```
 
-(ref:captionfig9) **9:** \hypertarget{fig9}{}Precision, accuracy, and identifiability of posterior estimates of the effect of exposure history ($\alpha$) **(top)**, the effect of sonar frequency ($\omega$) **(middle)**, and the effective response range (ERR) **(bottom)**, under scenario 2. Columns show **(A)** the average width of credible intervals (CIw) across simulations, expressed in dB re 1$\mu$Pa for $\alpha$ and $\beta$ and in km for ERR, **(B)** the average absolute percent mean bias (PMB, in %), defined as (posterior mean-truth)/truth, and **(C)** the prior posterior overlap (PPO, in %). PPO values above 35% indicate that parameters may be non-identifiable [@Gimenez2009].
+(ref:captionfig9) **9:** \hypertarget{fig9}{}Precision, accuracy, and identifiability of posterior estimates of the effect of exposure history ($\alpha$) **(top)**, the effect of sonar frequency ($\beta$) **(middle)**, and the effective response range (ERR) **(bottom)**, under scenario 2. Columns show **(A)** the average width of credible intervals (CIw) across simulations, expressed in dB re 1$\mu$Pa for $\alpha$ and $\beta$ and in km for ERR, **(B)** the average absolute percent mean bias (PMB, in %), defined as (posterior mean-truth)/truth, and **(C)** the prior posterior overlap (PPO, in %). PPO values above 35% indicate that parameters may be non-identifiable [@Gimenez2009].
 
 ```{r echo=FALSE, fig.show='hold', fig.align='center', out.width='90%', fig.cap = "(ref:captionfig9)"}
 knitr::include_graphics("fig/fig_heatplot_S2.png")
@@ -314,7 +314,7 @@ knitr::include_graphics("fig/fig_doseresponse_S4.png")
 knitr::include_graphics("fig/fig_forestplot_S4.png")
 ```
 
-(ref:captionfig15) **15:** \hypertarget{fig15}{}Precision, accuracy, and identifiability of posterior estimates of the effect of exposure history ($\alpha$) **(top)**, the effect of sonar frequency ($\omega$) **(middle)**, and the effective response range (ERR) **(bottom)**, under scenario 4. Columns show **(A)** the average width of credible intervals (CIw) across simulations, expressed in dB re 1$\mu$Pa for $\mu$ and $\omega$ and in km for ERR, **(B)** the average absolute percent mean bias (PMB, in %), defined as (posterior mean-truth)/truth, and **(C)** the prior posterior overlap (PPO, in %). PPO values above 35% indicate that parameters may be non-identifiable [@Gimenez2009].
+(ref:captionfig15) **15:** \hypertarget{fig15}{}Precision, accuracy, and identifiability of posterior estimates of the effect of exposure history ($\alpha$) **(top)**, the effect of sonar frequency ($\beta$) **(middle)**, and the effective response range (ERR) **(bottom)**, under scenario 4. Columns show **(A)** the average width of credible intervals (CIw) across simulations, expressed in dB re 1$\mu$Pa for $\mu$ and $\omega$ and in km for ERR, **(B)** the average absolute percent mean bias (PMB, in %), defined as (posterior mean-truth)/truth, and **(C)** the prior posterior overlap (PPO, in %). PPO values above 35% indicate that parameters may be non-identifiable [@Gimenez2009].
 
 ```{r echo=FALSE, fig.show='hold', fig.align='center', out.width='90%', fig.cap = "(ref:captionfig15)"}
 knitr::include_graphics("fig/fig_heatplot_S4.png")
