@@ -73,7 +73,7 @@ options(pillar.sigfig = 4)
 # Load required functions
 #'--------------------------------------------------------------------
 
-source('BayesianBR_simulation_functions.R')
+source('/Users/philippebouchet/Google Drive/Documents/git/doublemocha_sim/R/BayesianBR_simulation_functions.R')
 
 #'-------------------------------------------------
 # Run the simulations (parallel)

@@ -16,9 +16,9 @@ sansfont: Courier
 linestretch: 0.9
 editor_options:
   chunk_output_type: console
-css: ../../../dose_response.css
-csl: ../../../dose_response.csl
-bibliography: ../../../dose_response.bib
+css: ../dose_response.css
+csl: ../dose_response.csl
+bibliography: ../dose_response.bib
 link-citations: yes
 header-includes:
     - \usepackage{courier} % Courier font
@@ -100,7 +100,7 @@ All required functions are stored in the \code{BayesianBR\_simulation\_functions
 #'--------------------------------------------------------------------
 # Load required functions
 #'--------------------------------------------------------------------
-source('../BayesianBR_simulation_functions.R')
+source('../R/BayesianBR_simulation_functions.R')
 ```
 
 ```{r include=FALSE}
@@ -286,7 +286,7 @@ knitr::include_graphics("fig/fig_forestplot_mu.png")
 \renewcommand{\arraystretch}{1.4}
 ```{r echo=FALSE}
 text_tbl <- data.frame(
-  Argument = c("mcmc.object","layout.ncol", "pars.to.plot", "select.n", "select.obs", "summary.method", "start.shade", "n.cols", "darken.bars", "save.to.disk", "output.format"),
+  Argument = c("mcmc.object","layout.ncol", "pars.to.plot", "select.n", "select.obs", "summary.method", "start.shade", "n.cols", "darken.bars", "pt.size", "save.to.disk", "output.format"),
   Description = c("List object containing simulation outputs, as returned by simulate_scenario().",
                   "Number of columns used in the final plot layout. Must be an integer between 1 and 3.",
                   "Parameter(s) of interest. By default, the function will produce plots for every monitored parameter (param = NULL).",
@@ -296,6 +296,7 @@ text_tbl <- data.frame(
     "Number between 0 and 1 indicating the shade of the lightest to use on the Y-axis. Higher values indicate darker shades. Defaults to 0.2.",
      "Integer. Minimum number of colours used to define the colour palettes of the heat plots.",
     "Logical. Whether to add dark lines to the plot to enhance the legibility of the lightest colours. Defaults to FALSE.",
+    "Size of points in the output forest plots. Defaults to 8.5.",
     "Logical. Whether to save the plots to disk. Defaults to FALSE.",
     "Output file type. Defaults to 'pdf'."))
 
@@ -324,8 +325,8 @@ text_tbl <- data.frame(
     "Number of columns used in the plot layout. Values greater than 1 (default) allow multiple plots to be arranged in the same plotting space.",
     "Logical. Whether to save the plots to disk. Defaults to FALSE.",
     "Output file type. Defaults to 'pdf'.",
-    "Width of the output plot (in pixels).",
-    "Height of the output plot (in pixels).",
+    "Width of the output plot (in inches for PDF and pixels for other formats).",
+    "Height of the output plot (in inches for PDF and pixels for other formats).",
     "Resolution of the output plot (in dpi)."))
 
 text_tbl %>% 

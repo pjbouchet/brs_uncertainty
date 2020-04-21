@@ -152,7 +152,7 @@
 \makeatother
 \subtitle{R code description}
 \author{Phil Bouchet, Catriona Harris, Len Thomas}
-\date{14 April, 2020}
+\date{20 April, 2020}
 
 \begin{document}
 \maketitle
@@ -234,7 +234,7 @@ All required functions are stored in the \textcolor{codecolor}{\texttt{\hl{Bayes
 \CommentTok{#'--------------------------------------------------------------------}
 \CommentTok{# Load required functions}
 \CommentTok{#'--------------------------------------------------------------------}
-\KeywordTok{source}\NormalTok{(}\StringTok{'../BayesianBR_simulation_functions.R'}\NormalTok{)}
+\KeywordTok{source}\NormalTok{(}\StringTok{'../R/BayesianBR_simulation_functions.R'}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -429,8 +429,9 @@ summary.method & Character vector. One of 'mean' or 'median'. Whether to calcula
 start.shade & Number between 0 and 1 indicating the shade of the lightest to use on the Y-axis. Higher values indicate darker shades. Defaults to 0.2.\\
 n.cols & Integer. Minimum number of colours used to define the colour palettes of the heat plots.\\
 darken.bars & Logical. Whether to add dark lines to the plot to enhance the legibility of the lightest colours. Defaults to FALSE.\\
-save.to.disk & Logical. Whether to save the plots to disk. Defaults to FALSE.\\
+pt.size & Size of points in the output forest plots. Defaults to 8.5.\\
 \addlinespace
+save.to.disk & Logical. Whether to save the plots to disk. Defaults to FALSE.\\
 output.format & Output file type. Defaults to 'pdf'.\\
 \bottomrule
 \end{longtable}
@@ -454,8 +455,8 @@ n.row & Number of rows used in the plot layout. Values greater than 1 (default) 
 n.col & Number of columns used in the plot layout. Values greater than 1 (default) allow multiple plots to be arranged in the same plotting space.\\
 save.to.disk & Logical. Whether to save the plots to disk. Defaults to FALSE.\\
 output.format & Output file type. Defaults to 'pdf'.\\
-plot.width & Width of the output plot (in pixels).\\
-plot.height & Height of the output plot (in pixels).\\
+plot.width & Width of the output plot (in inches for PDF and pixels for other formats).\\
+plot.height & Height of the output plot (in inches for PDF and pixels for other formats).\\
 \addlinespace
 plot.res & Resolution of the output plot (in dpi).\\
 \bottomrule

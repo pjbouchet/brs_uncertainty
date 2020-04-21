@@ -119,7 +119,7 @@
 \makeatother
 \subtitle{Technical report}
 \author{Phil Bouchet, Catriona Harris, Len Thomas}
-\date{14 April, 2020}
+\date{20 April, 2020}
 
 \begin{document}
 \maketitle
@@ -271,7 +271,7 @@ D & Animal density & 1 & Animal/km\textsuperscript{2} & All\\
 
 \subsection{Priors}
 
-Prior distributions are required on all top-level random variables in the hierarchical model (Laplanche \emph{et al.} \protect\hyperlink{ref-Laplanche2015}{2015}) (shown as grey circles in Figure \hyperlink{fig1}{1}). We followed Miller \emph{et al.} (\protect\hyperlink{ref-Miller2014}{2014}) and largely chose diffuse uniform priors (Table \hyperlink{tab2}{2}), with the exception of the two coefficients governing the respective effects of exposure history (\(\alpha\)) and sonar frequency band (\(\beta\)), for which normal distributions were assumed. Importantly, priors were specified so as to constrain model parameters within biologically plausible bounds. For instance, \(\mu\) could take any value between 60 and 210 dB re 1\(\mu\)Pa with equal probability, under the conservative assumption that any noise below the lower limit would be barely audible above ambient (Pacini \emph{et al.} \protect\hyperlink{ref-Pacini2011}{2011}; Schick \emph{et al.} \protect\hyperlink{ref-Schick2019}{2019}), and that all animals would respond at or above the upper limit (Antunes \emph{et al.} \protect\hyperlink{ref-Antunes2014}{2014}; Miller \emph{et al.} \protect\hyperlink{ref-Miller2014}{2014}). Variance parameters for the observation model were assumed known, and hence did not require priors.
+Prior distributions are required on all top-level random variables in the hierarchical model (Laplanche \emph{et al.} \protect\hyperlink{ref-Laplanche2015}{2015}) (shown as grey circles in Figure \hyperlink{fig1}{1}). We followed Miller \emph{et al.} (\protect\hyperlink{ref-Miller2014}{2014}) and largely chose diffuse uniform priors (Table \hyperlink{tab2}{2}), with the exception of the two coefficients governing the respective effects of exposure history (\(\alpha\)) and sonar frequency band (\(\beta\)), for which we assumed normal distributions centred on zero. Note that this choice equates to a prior belief of no effect. Our expectation therefore was that as sample size would increase and errors decrease, posterior estimates of \(\alpha\) and \(\beta\) would move away from zero and closer to the truth, and that their associated credible intervals would shrink. Importantly, priors were specified so as to constrain model parameters within biologically plausible bounds. For instance, \(\mu\) could take any value between 60 and 210 dB re 1\(\mu\)Pa with equal probability, under the conservative assumption that any noise below the lower limit would be barely audible above ambient (Pacini \emph{et al.} \protect\hyperlink{ref-Pacini2011}{2011}; Schick \emph{et al.} \protect\hyperlink{ref-Schick2019}{2019}), and that all animals would respond at or above the upper limit (Antunes \emph{et al.} \protect\hyperlink{ref-Antunes2014}{2014}; Miller \emph{et al.} \protect\hyperlink{ref-Miller2014}{2014}). Variance parameters for the observation model were assumed known, and hence did not require priors.
 
 \textbf{Table 2:} \hypertarget{tab2}{}Summary of prior values for each parameter, expressed in dB re 1 \(\mu\)Pa. Lower and upper limits are reported for uniform distributions (U), and mean and standard deviations are reported for normal distributions (N). True underlying values are shown in the right-most column.
 
