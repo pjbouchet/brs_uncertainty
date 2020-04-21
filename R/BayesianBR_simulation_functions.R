@@ -2661,6 +2661,7 @@ plot_results <- function(mcmc.object,
                          start.shade = 0.2,
                          n.cols = 12,
                          darken.bars = FALSE,
+                         pt.size = 8.5,
                          save.to.disk = TRUE,
                          save.individual.plots = FALSE,
                          output.format = "pdf"){
@@ -2780,6 +2781,7 @@ plot_results <- function(mcmc.object,
   
   viridis.modified <- pals::viridis(n = length(unique(ridge.colors$n)))   # Modified viridis colour ramp
   viridis.modified[length(viridis.modified)] <- c("#ffad08") # ffbb00
+  viridis.modified <- rev(viridis.modified)
   
   primary.colours <- tibble::lst(alpha = seq(start.shade, 1, 
                                              length.out = length(unique(ridge.colors[,col_names[2]]))),
@@ -2914,11 +2916,19 @@ plot_results <- function(mcmc.object,
                  # Define order for plotting
                  #'--------------------------------------------------------------------
                  
+                 index.cb <- split(x = rev(1:(length(n.whales)*length(obs.param))),
+                       f = rep(1:length(n.whales), each = length(obs.param))) %>% 
+                   purrr::map(.x = ., .f = ~rev(.x)) %>% 
+                   do.call(cbind, .) %>% 
+                   as.vector(.)
+                 
                  combs <- expand.grid(n = unique(post.est$n), 
                                       alpha = unique(post.est$alpha)) %>% 
                    tibble::as_tibble(.) %>% 
                    dplyr::arrange(n, alpha) %>% 
-                   dplyr::mutate(index = 1:nrow(.)) %>% 
+                   dplyr::mutate(index = index.cb) %>% 
+                   dplyr::mutate(lg.index = 1:nrow(.)) %>%
+                   # dplyr::mutate(index = rev(1:nrow(.))) %>%
                    dplyr::mutate(n = as.character(n))
                  
                  post.forest <- post.forest %>% 
@@ -2930,6 +2940,7 @@ plot_results <- function(mcmc.object,
                  
                  post.forest$ord <- factor(post.forest$tcol, 
                                            levels = unique(post.forest$tcol[order(as.numeric(post.forest$index))]))
+                 
                  post.forest$comb <- factor(post.forest$comb, 
                                             levels = unique(post.forest$comb[order(as.numeric(post.forest$index))]))
                  
@@ -2945,7 +2956,8 @@ plot_results <- function(mcmc.object,
                  # Make sure order of colours is correct
                  #'--------------------------------------------------------------------
                  
-                 lgd$ord <- factor(lgd$tcol, levels = lgd$tcol[order(as.numeric(lgd$index))])
+                 lgd$ord <- factor(lgd$tcol, levels = lgd$tcol[nrow(lgd):1])
+                 # lgd$ord <- factor(lgd$tcol, levels = lgd$tcol[order(as.numeric(lgd$index))])
                  
                  #'--------------------------------------------------------------------
                  # Data for heat plots
@@ -3025,15 +3037,21 @@ plot_results <- function(mcmc.object,
     # Create bivariate legend
     #'--------------------------------------------------------------------
     
+    index.col <- split(x = rev(1:(length(n.whales)*length(obs.param))),
+                      f = rep(1:length(n.whales), each = length(obs.param))) %>% 
+      purrr::map(.x = ., .f = ~rev(.x)) %>% 
+      do.call(cbind, .) %>% 
+      as.vector(.)
+    
     f.legend <- ggplot(data = dat$lgd, aes(x, y)) +
-      geom_tile(aes(fill = ord), col = "white", size = 0.25) +
-      scale_fill_manual(values = dat$lgd$tcol) + 
+      geom_tile(aes(fill = ord[index.col]), col = "white", size = 0.25) +
+      scale_fill_manual(values = rev(dat$lgd$tcol)) + 
       theme_ridges(font_family = "sans") +
       theme(legend.position = "none",
             panel.background = element_blank(),
             plot.margin = margin(t = 20, b = 10, l = 10)) +
       xlab("Sample size (N)") +
-      {if(scenario %in% c(1,2)) ylab("SD of dose (dB)")} +
+      {if(scenario %in% c(1,2)) ylab(expression("Measurement uncertainty"~"("*delta*")"))} +
       {if(scenario %in% c(3,4)) ylab("Proportion of SAT tags (%)")} +
       theme(axis.title = element_text(color = "black"),
             axis.text.x = element_text(size = 12),
@@ -3075,19 +3093,19 @@ plot_results <- function(mcmc.object,
       
       {if(!dark) geom_linerange(aes(col = comb), size = 1)} +
       
-      geom_point(aes(x = comb, y = dot.mean, fill = comb), shape = 21, size = 4, stroke = 0.75) +
+      geom_point(aes(x = comb, y = dot.mean, fill = comb), shape = 21, size = pt.size, stroke = 0.75) +
       
       coord_flip() +
       
       theme_ridges() +
       
       scale_fill_manual(name = ifelse(scenario %in% c(1,2), 
-                                      "Uncertainty in dose (dB)", 
+                                      expression("Measurement uncertainty"~"("*delta*")"), 
                                       "Proportion of SAT tags (%)"), 
                         values = as.character(unique(dat$post.forest$ord))) +
       
       scale_colour_manual(name = ifelse(scenario %in% c(1,2), 
-                                        "Uncertainty in dose (dB)", 
+                                        expression("Measurement uncertainty"~"("*delta*")"), 
                                         "Proportion of SAT tags (%)"), 
                           values = as.character(unique(dat$post.forest$ord))) +
       
@@ -3107,7 +3125,9 @@ plot_results <- function(mcmc.object,
       ggnewscale::new_scale_fill() + # To allow multiple colour scales
       
       theme(axis.text.y = element_blank(),
+            axis.text.x = element_text(size = 18, margin = margin(t = 10, r = 0, b = 0, l = 0)),
             axis.ticks.y = element_blank(),
+            axis.ticks.x = element_blank(),
             panel.grid.major = element_line(size = 0.2),
             panel.grid.minor = element_line(size = 0.2),
             legend.position = "none",
@@ -3173,7 +3193,7 @@ plot_results <- function(mcmc.object,
                              heat.plot <- ggplot(data = dat$lgd, aes(x = x, y = y)) +
                                geom_tile(aes(fill = fct), col = "white", size = 0.25) +
                                scale_fill_manual(values = myColors) +
-                               {if(scenario %in% c(1,2)) ylab("SD of dose (dB)")} +
+                               {if(scenario %in% c(1,2)) ylab(expression("Measurement uncertainty"~"("*delta*")"))} +
                                {if(scenario %in% c(3,4)) ylab("Proportion of SAT tags (%)")} +
                                xlab("Sample size (N)") +
                                {if(param=="mu") ggtitle(mu ~ "")} +
@@ -3320,7 +3340,7 @@ plot_results <- function(mcmc.object,
                                       filename = paste0(getwd(), "/out/scenario_", scenario, "/S", scenario, 
                                                         "_forestplot_", .x, "_", index, 
                                                         ".", output.format), 
-                                      device = output.format, 
+                                      device = output.format, dpi = 350,
                                       height = plot.height, width = plot.width))
     
     # Heat maps (combined)
@@ -3361,7 +3381,7 @@ plot_results <- function(mcmc.object,
                                                 filename = paste0(getwd(), "/out/scenario_", scenario, "/S", scenario, 
                                                                   "_heatplot_", pp, "_", .y, "_", index, 
                                                                   ".", output.format), 
-                                                device = output.format, 
+                                                device = output.format,
                                                 height = 5, width = 4))})
     }
     
@@ -3388,8 +3408,8 @@ plot_doseresponse <- function(mcmc.object,
                               n.col = 1,
                               save.to.disk = FALSE, 
                               output.format = "pdf",
-                              plot.width = 850,
-                              plot.height = 850,
+                              plot.width = 10,
+                              plot.height = 10,
                               plot.res = 300){
   
   #'--------------------------------------------------------------------
@@ -3455,7 +3475,8 @@ plot_doseresponse <- function(mcmc.object,
   #'-------------------------------------------------
   
   if(save.to.disk & output.format=="pdf") pdf(paste0(getwd(), "/out/scenario_", scenario, "/S", 
-                                                     scenario, "_doseresponse_plots_", index, ".pdf"))
+                                                     scenario, "_doseresponse_plots_", index, ".pdf"), 
+                                              width = plot.width, height = plot.height)
   
   par(mfrow = c(n.row, n.col))
 
@@ -3534,7 +3555,7 @@ plot_doseresponse <- function(mcmc.object,
                       xlim = c(mcmc.object$params$lower.bound,
                                mcmc.object$params$upper.bound),
                       cex.lab = 1.2, 
-                      cex.main = 1, 
+                      cex.main = 1.1, 
                       cex.axis = 1.1,
                       main = plot.title)
                  
