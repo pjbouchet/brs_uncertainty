@@ -106,4 +106,6 @@ mcmc.s1 <- compile_sim(scenario = 1)
 mcmc.rs1 <- extra_sim(mcmc.object = mcmc.s1, replace.sims = TRUE, update.dr = TRUE)
 
 plot_results(mcmc.object = mcmc.rs1, layout.ncol = 1, save.to.disk = TRUE)
+plot_results(mcmc.object = mcmc.s1, layout.ncol = 1, save.to.disk = TRUE, select.n = c(5, 10, 20, 40), select.obs = c(2.5,5,10,20,35), save.individual.plots = TRUE, common.scale = TRUE)
+plot_results(mcmc.object = mcmc.s3, layout.ncol = 1, save.to.disk = TRUE, select.n = c(5, 10, 20, 40), select.obs = c(20,40,60,80,100), save.individual.plots = TRUE, common.scale = TRUE)
 plot_doseresponse(mcmc.object = mcmc.rs1, save.to.disk = TRUE, n.row = 3, n.col = 3)

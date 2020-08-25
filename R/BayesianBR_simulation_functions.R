@@ -604,7 +604,7 @@ run_scenario <- function(
       # dinterval() distribution (see JAGS model code). Suppose that U has
       # 3 values in it, rather than just one, such that U = c(170,180,190).
       # Then, randomly generated values from dinterval(y, c(170,180,190)) 
-      # will be either 0, 1, 2, or 3 depending on whether y<170, 170<y<800,
+      # will be either 0, 1, 2, or 3 depending on whether y<170, 170<y<180,
       # 180<y<190, or 190<y. So, if y = 175, dinterval(y,c(170,180,190)) 
       # has output of 1 with 100% probability. The trick is this: We instead
       # specify the output of dinterval, and impute a random value of y 
@@ -2657,6 +2657,7 @@ plot_results <- function(mcmc.object,
                          pars.to.plot = NULL,
                          select.n = NULL,
                          select.obs = NULL,
+                         common.scale = FALSE,
                          summary.method = "mean",
                          start.shade = 0.2,
                          n.cols = 12,
@@ -3137,7 +3138,7 @@ plot_results <- function(mcmc.object,
     
   } # End make_forestplot
   
-  make_heatplot <- function(dat, param){
+  make_heatplot <- function(dat, param, max.cred.width = 85, max.prb = 50, max.ppo = 35){
     
     #'--------------------------------------------------------------------
     # Parameters to produce a plot for
@@ -3145,8 +3146,7 @@ plot_results <- function(mcmc.object,
     
     heat.params <- c("cred.width", "prb")
     
-    if(!param == "ERR"){
-      if(!is.null(mcmc.object$ppo)) heat.params <- c(heat.params, "ppo")}
+    if(!param == "ERR"){if(!is.null(mcmc.object$ppo)) heat.params <- c(heat.params, "ppo")}
 
     heat.mat <- purrr::map(.x = heat.params, 
                            .f = ~{
@@ -3155,28 +3155,68 @@ plot_results <- function(mcmc.object,
                              # Generate labels and data for colour scales
                              #'-----------------------------------------------
                              
-                             heat.values <- dat$lgd %>% 
-                               dplyr::pull(.x)
+                             heat.values <- dat$lgd %>% dplyr::pull(.x)
                              
-                             heat.breaks <- pretty(x = heat.values, min.n = n.cols, n = n.cols +2) 
+                             if(common.scale){
+                              
+                               heat.range <-  list()
+                               heat.range$cred.width <- rep(list(0:max.cred.width), 7)
+                               heat.range$prb <- rep(list(0:max.prb), 7)
+                               
+                               names(heat.range$cred.width) <- names(heat.range$prb) <-c("mu", "omega", "phi", "sigma", "alpha", "beta", "ERR")
+
+                               
+                               if(!is.null(mcmc.object$ppo)){
+                                 heat.range$ppo <- rep(list(0:max.ppo), 7)
+                               names(heat.range$ppo) <- names(heat.range$cred.width)}
+                               
+                               heat.breaks <- pretty(x = heat.range[[.x]][[param]], n = n.cols +2) 
+                               # min.n = n.cols
+                             }else{
+
+                             heat.breaks <- pretty(x = heat.values, n = n.cols +2)}
+                             
                              heat.labels <- cut(heat.values, heat.breaks)
+                             max.point <- min(max(heat.breaks), get(paste0("max.", .x)))
                              
+                             heat.labels <- factor(heat.labels, levels = c(levels(heat.labels), paste0("> ", max.point)))
+                             heat.labels[is.na(heat.labels)] <- paste0("> ", max.point)
+                                                          
+                           
                              dat$lgd <- dat$lgd %>% dplyr::mutate(fct = heat.labels)
                              
                              if(length(unique(dat$lgd$fct))>=3){
-                               if(.x == "cred.width") myColors <- rev(pals::brewer.spectral(n = length(unique(dat$lgd$fct))))
                                
-                               if(.x == "ppo") myColors <- pals::brewer.blues(n = length(unique(dat$lgd$fct)))
+                               if(.x == "cred.width"){
+                                 
+                                 if(!common.scale) myColors <- rev(pals::brewer.spectral(n = length(unique(dat$lgd$fct)))) 
+                                 else myColors <- c(rev(pals::brewer.spectral(n = nlevels(dat$lgd$fct)-1)), "gray90")}
+                               
+                               if(.x == "ppo"){
+                                 
+                                 if(!common.scale) myColors <- pals::brewer.blues(n = length(unique(dat$lgd$fct))) 
+                                 else myColors <- c(pals::brewer.blues(n = nlevels(dat$lgd$fct)-1), "gray90")}
+                               
+                               if(.x == "prb"){
+                                 if(!common.scale) myColors <- pals::viridis(n = length(unique(dat$lgd$fct))) else myColors <- c(pals::viridis(n = nlevels(dat$lgd$fct)-1), "gray90")}
                              
                              }else{
                                
-                               if(.x == "cred.width") myColors <- rev(pals::cividis(n = length(unique(dat$lgd$fct))))
+                               if(.x == "cred.width"){
+                                 
+                                 if(!common.scale) myColors <- rev(pals::cividis(n = length(unique(dat$lgd$fct))))
+                                 else myColors <- c(rev(pals::cividis(n = nlevels(dat$lgd$fct)-1)), "gray90")} 
                                
-                               if(.x == "ppo") myColors <- pals::coolwarm(n = length(unique(dat$lgd$fct)))
+                               if(.x == "ppo"){
+                                 
+                                 if(!common.scale) myColors <- pals::coolwarm(n = length(unique(dat$lgd$fct))) else
+                                   myColors <- c(pals::coolwarm(n = nlevels(dat$lgd$fct)-1), "gray90")} 
+                               
+                               if(.x == "prb"){
+                               if(!common.scale) myColors <- pals::viridis(n = length(unique(dat$lgd$fct))) else myColors <- c(pals::viridis(n = nlevels(dat$lgd$fct)-1), "gray90")}
+                               
                              }
-                             
-                             if(.x == "prb") myColors <- pals::viridis(n = length(unique(dat$lgd$fct)))
-                             
+
                              if(.x == "cred.width"){
                                if(!param == "ERR") add.x <- "dB" else add.x <- "km"
                                lgd.title <- paste0("Credible interval width (", add.x, ")")
@@ -3191,39 +3231,46 @@ plot_results <- function(mcmc.object,
                              #'-----------------------------------------------
                              
                              heat.plot <- ggplot(data = dat$lgd, aes(x = x, y = y)) +
-                               geom_tile(aes(fill = fct), col = "white", size = 0.25) +
-                               scale_fill_manual(values = myColors) +
-                               {if(scenario %in% c(1,2)) ylab(expression("Measurement uncertainty"~"("*delta*")"))} +
-                               {if(scenario %in% c(3,4)) ylab("Proportion of SAT tags (%)")} +
-                               xlab("Sample size (N)") +
+                               geom_tile(aes(fill = fct), col = "white", size = 0.5) +
+                               scale_fill_manual(values = myColors, drop = FALSE) +
+                               {if(!common.scale){if(scenario %in% c(1,2)) ylab(expression("Observation uncertainty"~"("*delta*")"))}} +
+                               {if(!common.scale){if(scenario %in% c(3,4)) ylab("Proportion of SAT tags (%)")}} +
+                               {if(!common.scale) xlab("Sample size (N)")} +
                                {if(param=="mu") ggtitle(mu ~ "")} +
                                {if(param=="omega") ggtitle(omega ~ "")} +
                                {if(param=="phi") ggtitle(phi ~ "")} +
                                {if(param=="sigma") ggtitle(sigma ~ "")} +
+                               {if(param=="alpha") ggtitle(alpha ~ "")} +
                                {if(param=="beta") ggtitle(beta ~ "")} +
                                {if(param=="ERR") ggtitle("ERR")} +
-                               labs(fill = lgd.title) +
+                               {if(!common.scale) labs(fill = lgd.title)} +
                                theme_ridges(font_family = "sans") +
                                theme(panel.background = element_blank(),
                                      panel.grid.major = element_blank(), 
                                      panel.grid.minor = element_blank(),
                                      panel.border = element_rect(colour = "black", fill = NA, size = 15),
                                      plot.margin = margin(t = 20, b = 10, l = 10)) +
-                               theme(axis.title = element_text(color = "black"),
+                              {if(!common.scale) theme(axis.title = element_text(color = "black"),
                                      axis.text.x = element_text(size = 12),
                                      axis.text.y = element_text(size = 12),
-                                     text = element_text(size = 12)) +
+                                     text = element_text(size = 12))} +
+                               {if(common.scale) theme(axis.title = element_blank(),
+                                                       legend.title = element_blank(),
+                                                       text = element_text(size = 18),
+                                                       axis.text = element_text(size = 18))} +
                                suppressWarnings(scale_x_continuous(breaks = unique(dat$lgd$x), 
                                                                    labels = unique(removelzero(dat$lgd$n)), expand = c(0,0))) +
                                suppressWarnings(scale_y_continuous(breaks = unique(dat$lgd$y), 
                                                                    labels = unique(removelzero(unlist(dat$lgd[,col_names[2]]))), 
                                                                    expand = c(0,0))) +
-                               theme(legend.position = "bottom", legend.text = element_text(size = 12), 
-                                     legend.title = element_text(face = "bold")) +
-                               guides(fill = guide_legend(nrow = round(n.cols/2), 
-                                                          byrow = FALSE, 
+                               {if(!common.scale) theme(legend.position = "bottom", legend.text = element_text(size = 12), legend.title = element_text(face = "bold"))} +
+                               {if(common.scale) guides(fill = guide_legend(reverse = TRUE,
                                                           title.position = "top", 
-                                                          title.vjust = 1.5))
+                                                          title.vjust = 1.5))} + 
+                               {if(!common.scale) guides(fill = guide_legend(nrow = round(n.cols/2), 
+                                                                            byrow = FALSE,
+                                                                            title.position = "top", 
+                                                                            title.vjust = 1.5))}
                              
                            }) %>% 
       purrr::set_names(x = ., nm = heat.params)
@@ -3368,6 +3415,8 @@ plot_results <- function(mcmc.object,
     
     # Heat maps (individual)
     
+    if(common.scale) plot.dimensions <- c(4, 5) else plot.dimensions <- c(5, 4)
+      
     purrr::walk(.x = params.monitored,
                 .f = ~{
                   tmp <- heat.plots[[.x]]
@@ -3382,7 +3431,7 @@ plot_results <- function(mcmc.object,
                                                                   "_heatplot_", pp, "_", .y, "_", index, 
                                                                   ".", output.format), 
                                                 device = output.format,
-                                                height = 5, width = 4))})
+                                                height = plot.dimensions[1], width = plot.dimensions[2]))})
     }
     
   }else{
@@ -3933,6 +3982,14 @@ compile_sim <- function(scenario){
   # Import all data into a list
   #'-------------------------------------------
   
+  converged.f <- file.path(sdir, paste0("mcmc.converged_S", scenario, ".rds"))
+  
+  if(file.exists(converged.f)){
+    
+    mcmc.compiled <- readRDS(converged.f)
+    
+  }else{
+    
   mcmc.sims <- purrr::map(.x = fl, .f = ~readRDS(file.path(sdir, .x)))
   mcmc.sims <- purrr::set_names(mcmc.sims, 
                                 gsub(pattern = ".rds", replacement = "", 
@@ -4091,8 +4148,10 @@ compile_sim <- function(scenario){
   mcmc.compiled$params$parallel.cores <- purrr::map(mcmc.sims, "params") %>% 
     purrr::map(., "parallel.cores") %>% unlist() %>% unique() %>% sort()
   
-  return(mcmc.compiled)
+  }
   
+  return(mcmc.compiled)
+
 } # End compile_sim
 
 #'--------------------------------------------------------------------
