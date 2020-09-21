@@ -611,6 +611,8 @@ run_scenario <- function(
       # that could produce it. Thus, if we say 1 ~ dinterval(y,c(170,180,190))
       # then y is imputed as a random value between 170 and 180.
       
+      # https://stats.stackexchange.com/questions/13847/how-does-dinterval-for-interval-censored-data-work-in-jags
+      
       is.censored <- ifelse(y>Rc, 1, 0)
       y.censored <- y; y.censored[is.censored==1] <- NA
       
@@ -640,7 +642,7 @@ run_scenario <- function(
                        measurement.precision = measurement.precision,
                        y = y.censored,
                        I.censored = is.censored,
-                       U = U)
+                       U = U, Rc = Rc)
       
       if(scenario %in% c(1,3)) sim_data <- append(sim_data, list(omega.upper.bound = omega.upper.bound))
       if(scenario %in% c(2,4)) sim_data <- append(sim_data, list(whale.id = whale.id,
