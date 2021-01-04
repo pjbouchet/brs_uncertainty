@@ -2,7 +2,7 @@
 
 This repository contains R code accompanying the article:
 
-Bouchet PJ, Harris CM, Thomas L. Assessing the role of uncertainty in received sound levels for predicting behavioural responses of cetaceans exposed to naval sonar.
+Bouchet PJ, Harris CM, Thomas L. Assessing the role of sampling uncertainty for predicting behavioural responses of tagged cetaceans exposed to naval sonar. Frontiers in Marine Science.
 
 #### Further details
 
