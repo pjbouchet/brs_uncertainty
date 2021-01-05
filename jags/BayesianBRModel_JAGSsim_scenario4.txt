@@ -26,7 +26,7 @@ model{
   for(i in 1:n.whales){
   
     # Between whales
-    mu_i[i]~dnorm(mu, inv_phi2) T(lower.bound,upper.bound)
+    mu_i[i]~dnorm(mu, inv_phi2) T(lower.bound, upper.bound)
   }
   
   for(j in 1:n.trials){ 
@@ -35,7 +35,7 @@ model{
     mu_ij[j]<-mu_i[whale.id[j]] + alpha*I.exposed[j] - beta*I.mfas[j] + beta*I.lfas[j] 
     
    # Between trials, within whale  
-    t_ij[j]~dnorm(mu_ij[j], inv_sigma2) T(lower.bound,upper.bound) 
+    t_ij[j]~dnorm(mu_ij[j], inv_sigma2) T(lower.bound, upper.bound) 
   }
 
   # ------------------------------
@@ -44,10 +44,10 @@ model{
   
   for(k in 1:n.trials){
     
-    y[k]~dnorm(t_ij[k],measurement.precision[k])
+    y[k]~dnorm(t_ij[k], measurement.precision[k]) T(lower.bound, upper.bound) 
     
     # Right-censoring
-    I.censored[k]~dinterval(y[k],U[k])
+    I.censored[k]~dinterval(t_ij[k], U[k])
   }
   
 }

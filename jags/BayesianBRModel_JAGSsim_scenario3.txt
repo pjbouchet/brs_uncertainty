@@ -25,10 +25,10 @@ model{
   
   for(i in 1:n.whales){
     
-    y[i]~dnorm(mu_i[i], measurement.precision[i])
+    y[i]~dnorm(mu_i[i], measurement.precision[i]) T(lower.bound,upper.bound)
     
     # Right-censoring
-    I.censored[i]~dinterval(y[i],U[i])
+    I.censored[i]~dinterval(mu_i[i], U[i])
     
   }
   

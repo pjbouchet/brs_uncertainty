@@ -44,10 +44,10 @@ model{
   
   for(k in 1:n.trials){
     
-    y[k]~dnorm(t_ij[k], measurement.precision)
+    y[k]~dnorm(t_ij[k], measurement.precision) T(lower.bound,upper.bound)
     
     # Right-censoring
-    I.censored[k]~dinterval(y[k], U[k])
+    I.censored[k]~dinterval(t_ij[k], U[k])
   }
   
 }
