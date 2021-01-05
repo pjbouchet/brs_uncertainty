@@ -7,3 +7,9 @@ example_convergence/
 xy_error_example_A.pdf
 xy_error_example_B.pdf
 pdf/TechReport_frontcover.pdf
+.Rproj.user
+*.Rproj
+data/
+out/
+Rplots.pdf
+*.Rhistory
