@@ -11,5 +11,7 @@ pdf/TechReport_frontcover.pdf
 *.Rproj
 data/
 out/
+out_original/
 Rplots.pdf
 *.Rhistory
+.Rhistory
