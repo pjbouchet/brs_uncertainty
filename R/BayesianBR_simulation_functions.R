@@ -1,7 +1,6 @@
 #'--------------------------------------------------------------------
-# Function to conduct Bayesian simulations based on scenarios 1-4
+# Function to perform simulations
 #'--------------------------------------------------------------------
-# Simulation plan https://docs.google.com/document/d/1p93JOeD1EL9qvp9swjtdXgLtP76MSNw6aKDf4F-fOsM/edit?usp=sharing
 
 run_scenario <- function(
   
@@ -10,18 +9,18 @@ run_scenario <- function(
   scenario,
   n.sim, 
   n.whales, 
-  n.trials.per.whale = 3, 
+  n.trials.per.whale = 2, 
   uncertainty.dose = NULL,
   prop.sat = NULL,
   dtag.sd = 2.5,
-  source.level = 210,
+  source.level = 215,
   species.argos = "Zc",
   
   # Parameters
   
-  true.mu = 150, # Moretti et al. 2014 
-  lower.bound = 60, # Schick et al. 2019
-  upper.bound = 210,
+  true.mu = 120, 
+  lower.bound = 60,
+  upper.bound = 215,
   true.omega = 30,
   omega.upper.bound = 40,
   true.phi = 20,
@@ -30,9 +29,9 @@ run_scenario <- function(
   sigma.upper.bound = 30,
   true.beta = 20, # Magnitude of difference between MFAS/LFAS
   beta.sd = 10,
-  true.alpha = 8,
+  true.alpha = 10,
   alpha.sd = 10,
-  censor.right = c(190, 200),
+  censor.right = c(150, 165),
   
   # MCMC
   
@@ -580,21 +579,37 @@ run_scenario <- function(
         uncertainty.RL[which(attached.tags==1)] <- sd.RL}
       
       # Final observations
-
-      if(scenario == 1) y <- stats::rnorm(n = n.whales[nowh], mean = mu.i, sd = obs.param[obsval])
-      if(scenario == 2) y <- stats::rnorm(n = n.trials, mean = t.ij, sd = obs.param[obsval])
-      if(scenario == 3) y <- stats::rnorm(n = n.whales[nowh], mean = mu.i, sd = uncertainty.RL)
-      if(scenario == 4) y <- stats::rnorm(n = n.trials, mean = t.ij, sd = uncertainty.RL)
-
+      
+      if (scenario == 1) {
+        y <- truncnorm::rtruncnorm(
+          n = n.whales[nowh], mean = mu.i, sd = obs.param[obsval], a = lower.bound,
+          b = upper.bound)}
+      
+      if (scenario == 2) {
+        y <- truncnorm::rtruncnorm(
+          n = n.trials, mean = t.ij, sd = obs.param[obsval], a = lower.bound,
+          b = upper.bound)}
+      
+      if (scenario == 3) {
+        y <- truncnorm::rtruncnorm(
+          n = n.whales[nowh], mean = mu.i, sd = uncertainty.RL, a = lower.bound,
+          b = upper.bound)}
+      
+      if (scenario == 4) {
+        y <- truncnorm::rtruncnorm(
+          n = n.trials, mean = t.ij, sd = uncertainty.RL, a = lower.bound,
+          b = upper.bound)}
+      
       #'-------------------------------------------------
-      # Censoring
+      # Right-censoring
       #'-------------------------------------------------
       
       # Upper bound reached in the case of censoring - sampled from U(left, right)
       
-      if(scenario%in%c(1,3)) Rc <- runif(n = n.whales[nowh], min = censor.right[1], max = censor.right[2]) else Rc <- rep(runif(n = n.whales[nowh], min = censor.right[1], max = censor.right[2]), each = n.trials.per.whale)
+      U <- rep(upper.bound, ifelse(scenario %in% c(1, 3), n.whales[nowh], n.trials))
       
-      U <- rep(upper.bound, ifelse(scenario%in%c(1,3), n.whales[nowh], n.trials))
+      if(scenario%in%c(1,3)) Rc <- runif(n = n.whales[nowh], min = censor.right[1], max = censor.right[2]) else 
+        Rc <- runif(n = n.trials, min = censor.right[1], max = censor.right[2])
       
       # http://doingbayesiandataanalysis.blogspot.com/2012/01/complete-example-of-right-censoring-in.html
       # https://stats.stackexchange.com/questions/70858/right-censored-survival-fit-with-jags?rq=1
@@ -613,9 +628,10 @@ run_scenario <- function(
       
       # https://stats.stackexchange.com/questions/13847/how-does-dinterval-for-interval-censored-data-work-in-jags
       
-      is.censored <- ifelse(y>Rc, 1, 0)
-      y.censored <- y; y.censored[is.censored==1] <- NA
-      
+      is.censored <- ifelse(y > Rc, 1, 0)
+      U[is.censored == 1] <- Rc[is.censored == 1]
+      y.censored <- y; y.censored[is.censored == 1] <- NA
+   
       #'-------------------------------------------------
       # Left-censoring
       #'-------------------------------------------------
@@ -642,7 +658,7 @@ run_scenario <- function(
                        measurement.precision = measurement.precision,
                        y = y.censored,
                        I.censored = is.censored,
-                       U = U, Rc = Rc)
+                       U = U)
       
       if(scenario %in% c(1,3)) sim_data <- append(sim_data, list(omega.upper.bound = omega.upper.bound))
       if(scenario %in% c(2,4)) sim_data <- append(sim_data, list(whale.id = whale.id,
@@ -657,14 +673,18 @@ run_scenario <- function(
 
       # Initial values
       
-      sim_inits <- list(mu = true.mu, mu_i = rep(true.mu, length(mu.i)))
+      sim_inits <- list(mu = true.mu)
       
-      if(scenario %in% c(1,3)) sim_inits <- append(sim_inits, list(omega = true.omega))
-      if(scenario %in% c(2,4)) sim_inits <- append(sim_inits, list(t_ij = t.ij, 
-                                                                   beta = true.beta, 
-                                                                   alpha = true.alpha,
-                                                                   phi = true.phi, 
-                                                                   sigma = true.sigma))
+      if(scenario %in% c(1,3)){
+        inits_mui <- mu.i
+        inits_mui[is.censored == 1] <- runif(n = sum(is.censored), min = Rc[is.censored == 1], max = upper.bound)
+        sim_inits <- append(sim_inits, list(omega = true.omega, mu_i = inits_mui))}
+      
+      if(scenario %in% c(2,4)){
+        inits_tij <- t.ij
+        inits_tij[is.censored == 1] <- runif(n = sum(is.censored), min = Rc[is.censored == 1], max = upper.bound)
+        sim_inits <- append(sim_inits, list(t_ij = inits_tij, beta = true.beta, alpha = true.alpha,
+          phi = true.phi, sigma = true.sigma))}
       
       if(!mcmc.auto){
       
@@ -683,13 +703,21 @@ run_scenario <- function(
       # Burn-in
       #'-------------------------------------------------
       
-      if(length(burn.in)==1) rjags:::update.jags(object = m, 
-                                                 n.iter = burn.in, 
-                                                 progress.bar = "none")
+      if (length(burn.in) == 1) {
+        rjags:::update.jags(
+          object = m,
+          n.iter = burn.in,
+          progress.bar = "none"
+        )
+      }
       
-      if(length(burn.in)>1) rjags:::update.jags(object = m, 
-                                                 n.iter = burn.in[obsval], 
-                                                 progress.bar = "none")
+      if (length(burn.in) > 1) {
+        rjags:::update.jags(
+          object = m,
+          n.iter = burn.in[obsval],
+          progress.bar = "none"
+        )
+      }
       
       #'-------------------------------------------------
       # Draw samples from the posterior
@@ -933,7 +961,8 @@ run_scenario <- function(
     removelabels(scenario.id = scenario, tbl = .) %>%
     dplyr::select(., value, tidyselect::all_of(col_names)) %>% 
     dplyr::mutate(param = gsub(pattern = "posterior.", replacement = "", x = param)) %>% 
-    dplyr::arrange_at(., tidyselect::all_of(vars(col_names))) %>%
+    dplyr::arrange_at(., tidyselect::all_of(col_names)) %>%
+    # dplyr::arrange_at(., tidyselect::all_of(vars(col_names))) %>%
     dplyr::mutate(comb = paste0(n, "-", tidyselect::all_of(!!as.name(col_names[2]))))
 
   if(exists("internal.call")) mcmc.tbl.saved <- mcmc.tbl
@@ -1018,6 +1047,8 @@ run_scenario <- function(
   # ERR.N <- mcmc.n*n.sim/length(params.monitored)
   
   # CDF from a truncated Normal
+  
+  
   
   prob.response <- foreach::foreach(co = 1:length(mcmc_tbl)) %:%
                      foreach::foreach(pp = 1:(n.sim), 
@@ -1184,101 +1215,55 @@ run_scenario <- function(
   
   quants <- seq(95, 1, by = -5)
 
-  doseresp <- foreach::foreach(g = 1:nrow(dose.summary),
-                               .packages = c("magrittr", "tidyverse", "truncnorm"),
-                               .export = c("removelabels")) %dopar% {
-                                
-                                #'----------------------------------------------------
-                                # Extract row indices corresponding to each simulation    
-                                #'----------------------------------------------------
-                                        
-                                # row.indices <- which(mcmc.tbl$comb==dose.summary$comb[g])
-                                
-                                gn <- paste0(dose.summary[g,]$n, "-", dose.summary[g,col_names[2]])
-                                gs <- dose.summary[g,]$sim
-                                
-                                #'----------------------------------------------------
-                                # Extract relevant dose-response curves  
-                                #'---------------------------------------------------- 
+  doseresp.avg <- foreach::foreach(g = names(doseresp.values),
+                                   .packages = c("dplyr", "magrittr")) %dopar% {
+                                     
+                                     # all 10,000 dr curves for each simulation
+                                     dr.sim <- purrr::map(.x = doseresp.values[[g]],
+                                                          .f = ~do.call(rbind, .x)) 
+                                     
+                                     p.median <- purrr::map(.x = dr.sim, 
+                                                     .f = ~apply(X = .x, MARGIN = 2, FUN = median)) %>% 
+                                       do.call(rbind, .) %>% apply(., 2, mean)
+                                     
+                                     quants <- seq(95, 1, by = -5)
+                                     
+                                     q.low <- purrr::map(
+                                       .x = dr.sim,
+                                       .f = function(dr) {
+                                         purrr::map(quants,
+                                           function(y) apply(X = dr, MARGIN = 2, 
+                                                             FUN = quantile, (50 - y / 2) / 100)
+                                         ) %>% do.call(rbind, .)})
+                                     
+                                     q.up<- purrr::map(
+                                       .x = dr.sim,
+                                       .f = function(dr) {
+                                         purrr::map(quants,
+                                           function(y) apply(X = dr, MARGIN = 2, 
+                                                             FUN = quantile, (50 + y / 2) / 100)
+                                         ) %>% do.call(rbind, .)})
+                                     
+                                     q.low <- do.call(cbind, q.low) %>% 
+                                       array(., dim = c(dim(q.low[[1]]), length(q.low))) %>% 
+                                       apply(., c(1, 2), mean, na.rm = TRUE)
+                                  
+                                     q.up <- do.call(cbind, q.up) %>% 
+                                     array(., dim = c(dim(q.up[[1]]), length(q.up))) %>% 
+                                     apply(., c(1, 2), mean, na.rm = TRUE)
+                                   
+                                     list(doseresp.median = p.median,
+                                          doseresp.lower = q.low,
+                                          doseresp.upper = q.up)
+                                     
+                                   # plot(dose.range, seq(0, 1, length = length(dose.range)), type = 'n')
+                                   # lines(dose.range, p.median, col = "orange", lwd = 2)
+                                   # for (i in 1:nrow(q.low)) lines(dose.range, q.low[i, ], col = "lightblue")
+                                   # for (i in 1:nrow(q.up)) lines(dose.range, q.up[i, ], col = "lightgrey") 
+                                   
+                                   }
 
-                                # dose_resp <- doseresp.values[row.indices] %>% 
-                                #   do.call(rbind,.)
-                                
-                                dose_resp <- doseresp.values[[gn]][[gs]] %>% do.call(rbind, .)
-          
-                                #'----------------------------------------------------
-                                # Calculate median dose-response curve   
-                                #'---------------------------------------------------- 
-                                 
-                                p.median <- apply(X = dose_resp, MARGIN = 2, FUN = median)
-                                 
-                                #'----------------------------------------------------
-                                # Calculate quantiles
-                                #'---------------------------------------------------- 
-
-                                 q.low <- purrr::map(.x = quants, 
-                                                     .f = ~apply(X = dose_resp, MARGIN = 2, 
-                                                                 FUN = quantile, (50-.x/2)/100)) %>% 
-                                   do.call(rbind,.)
-                                 
-                                 q.up <- purrr::map(.x = quants, 
-                                                    .f = ~apply(X = dose_resp, MARGIN = 2, 
-                                                                FUN = quantile, (50+.x/2)/100)) %>% 
-                                   do.call(rbind,.)
-                                 
-                                 #'----------------------------------------------------
-                                 # Return results
-                                 #'---------------------------------------------------- 
-                                 
-                                 list(doseresp.median = p.median, 
-                                      doseresp.lower = q.low, 
-                                      doseresp.upper = q.up)}
-
-  doseresp <- doseresp %>% purrr::set_names(x = ., nm = dose.summary$nR)
   
-  #'--------------------------------------------------------------------
-  # Take average across simulations
-  #'--------------------------------------------------------------------
-
-  doseresp.avg <- foreach::foreach(g = unique(dose.summary$nR),
-                               .packages = c("dplyr", "magrittr")) %dopar% {
-
-                                #'----------------------------------------------------
-                                # Extract row indices corresponding to n x RL / ratios   
-                                #'----------------------------------------------------  
-                                 
-                                # row.indices <- which(dose.summary$nR==g)
-                                sub.l <- doseresp[names(doseresp)==g]
-   
-                                nR.mean <- purrr::map(.x = sub.l, .f = "doseresp.median") %>% 
-                                  do.call(rbind, .) %>% 
-                                  apply(X = ., MARGIN = 2, mean)
-                                 
-                                # nR.mean <- purrr::map(.x = doseresp, 
-                                #                         .f = "doseresp.median")[row.indices] %>% 
-                                #    do.call(rbind, .) %>% 
-                                #     apply(X = ., MARGIN = 2, mean)
-                                
-                                nR.qlow <- purrr::map(.x = sub.l, .f = "doseresp.lower")
-                                
-                                #'----------------------------------------------------
-                                # Takes the mean over all matrices (by row)
-                                #'----------------------------------------------------  
-                                
-                                nR.q.low <- do.call(cbind, nR.qlow) %>% 
-                                  array(., dim = c(dim(nR.qlow[[1]]), length(nR.qlow))) %>% 
-                                  apply(., c(1, 2), mean, na.rm = TRUE)
-                                 
-                                nR.qup <- purrr::map(.x = doseresp, .f = "doseresp.upper")
-                                
-                                nR.q.up <- do.call(cbind, nR.qup) %>% 
-                                  array(., dim = c(dim(nR.qup[[1]]), length(nR.qup))) %>% 
-                                  apply(., c(1, 2), mean, na.rm = TRUE)
-                                 
-                                 list(doseresp.mean = nR.mean,
-                                      doseresp.lower = nR.q.low,
-                                      doseresp.upper = nR.q.up)}
-
   # Assign names to list elements
   
   doseresp.avg <- purrr::set_names(doseresp.avg, unique(dose.summary$nR))
@@ -1409,45 +1394,54 @@ run_scenario <- function(
   #  In a nutshell: Unidentifiable parameters will have high PPO values; Gimenez et al (2009) 
   #  suggest that overlap greater than 35% indicates weak identifiability.
   
-  suppressWarnings(ppo.tbl <- lapply(X = params.monitored,
-                                     FUN = function(pp){
-                                       suppressMessages(purrr::map_depth(.x = mcmc.sims, 
-                                                                         .depth = 3, 
-                                                                         .f = ~{
-                                                                           
-                                                                           p.priors <- list(mu = runif(n = 15000, min = lower.bound, max = upper.bound),
-                                                                                            omega = runif(n = 15000, min = 0, max = omega.upper.bound),
-                                                                                            phi = runif(n = 15000, min = 0, max = phi.upper.bound),
-                                                                                            sigma = runif(n = 15000, min = 0, max = sigma.upper.bound),
-                                                                                            alpha = rnorm(n = 15000, mean = 0, sd = alpha.sd),
-                                                                                            beta = rnorm(n = 15000, mean = 0, sd = beta.sd))           
-                                                                           
-                                                                           MCMCvis::MCMCtrace(object = .x, params = pp, 
-                                                                                              priors = p.priors[[pp]], 
-                                                                                              pdf = FALSE, 
-                                                                                              plot = FALSE,
-                                                                                              PPO_out = TRUE)
-                                                                         }) %>% 
-                                                          reshape2::melt(.)) %>% 
-                                         dplyr::rename(., ppo = value, sim = L3, !!col_names[2] := L2, n = L1) %>% 
-                                         dplyr::mutate(param = pp)
-                                       
-                                     }) %>% do.call(rbind,.) %>% 
-                     tibble::as_tibble() %>% 
-                     removelabels(scenario.id = scenario, tbl = .) %>% 
-                     dplyr::mutate(ppo.check = ppo<=35) %>% 
-                     dplyr::select(., n, !!col_names[2], sim, ppo, ppo.check, param))
+  suppressWarnings(ppo.tbl <- lapply(
+    X = params.monitored,
+    FUN = function(pp) {
+      suppressMessages(purrr::map_depth(
+        .x = mcmc.sims,
+        .depth = 3,
+        .f = ~ {
+          p.priors <- list(
+            mu = runif(n = 15000, min = lower.bound, max = upper.bound),
+            omega = runif(n = 15000, min = 0, max = omega.upper.bound),
+            phi = runif(n = 15000, min = 0, max = phi.upper.bound),
+            sigma = runif(n = 15000, min = 0, max = sigma.upper.bound),
+            alpha = rnorm(n = 15000, mean = 0, sd = alpha.sd),
+            beta = rnorm(n = 15000, mean = 0, sd = beta.sd)
+          )
+          
+          MCMCvis::MCMCtrace(
+            object = .x, params = pp,
+            priors = p.priors[[pp]],
+            pdf = FALSE,
+            plot = FALSE,
+            PPO_out = TRUE
+          )
+        }
+      ) %>%
+        reshape2::melt(.)) %>%
+        dplyr::rename(., ppo = value, sim = L3, !!col_names[2] := L2, n = L1) %>%
+        dplyr::mutate(param = pp)
+    }
+  ) %>% do.call(rbind, .) %>%
+    tibble::as_tibble() %>%
+    removelabels(scenario.id = scenario, tbl = .) %>%
+    dplyr::mutate(ppo.check = ppo <= 35) %>%
+    dplyr::select(., n, !!col_names[2], sim, ppo, ppo.check, param))
   
-
-    ppo.sum <- sapply(X = params.monitored, 
-                      FUN = function(pp) sum(ppo.tbl[ppo.tbl$param==pp,]$ppo.check)==0)
-    
-    if(sum(ppo.sum)==sum(rep(1, length(ppo.sum)))){
-      ppo.msg <- "Parameters are identifiable."
-      if(verbose) cat(crayon::green(paste0(" \u2713 ", ppo.msg, "\n")))
-    }else{
-      ppo.msg <- "Some parameters show limited identifiability."
-      if(verbose) cat(crayon::yellow(paste0(" \u2717 ", ppo.msg, "\n")))}
+  
+  ppo.sum <- sapply(
+    X = params.monitored,
+    FUN = function(pp) sum(ppo.tbl[ppo.tbl$param == pp, ]$ppo.check) == 0
+  )
+  
+  if (sum(ppo.sum) == sum(rep(1, length(ppo.sum)))) {
+    ppo.msg <- "Parameters are identifiable."
+    if (verbose) cat(crayon::green(paste0(" \u2713 ", ppo.msg, "\n")))
+  } else {
+    ppo.msg <- "Some parameters show limited identifiability."
+    if (verbose) cat(crayon::yellow(paste0(" \u2717 ", ppo.msg, "\n")))
+  }
   
   
 # Convergence diagnostics ------------------------------------------------------------
@@ -1531,8 +1525,6 @@ run_scenario <- function(
         convergence.msg <- "MCMC chains did not converge in all simulations."
         if(verbose) cat(crayon::yellow(paste0("\u2717 ", convergence.msg, "\n")))}
 
-
-    
     
     # Trace plots of MCMC chains ------------------------------------------------------------
 
@@ -1696,7 +1688,6 @@ if(posterior.checks){
                                                       source.lvl = source.level, 
                                                       multi = FALSE, plot.ellipse = FALSE))
         
-        # t.ij[attached.tags==1] <- purrr::map_dbl(.x = argos.correction, "mean")
         sd.RL <- purrr::map_dbl(.x = argos.correction, "sd")
         }
         
@@ -2579,10 +2570,9 @@ extra_sim <- function(mcmc.object, replace.sims = TRUE, update.dr = FALSE){
                                          do.call(rbind, .) %>% 
                                          apply(X = ., MARGIN = 2, mean)
                                        
-                                       # nR.mean <- purrr::map(.x = doseresp, 
-                                       #                         .f = "doseresp.median")[row.indices] %>% 
-                                       #    do.call(rbind, .) %>% 
-                                       #     apply(X = ., MARGIN = 2, mean)
+                                       nR.median <- purrr::map(.x = sub.l, .f = "doseresp.median") %>% 
+                                         do.call(rbind, .) %>% 
+                                         apply(X = ., MARGIN = 2, median)
                                        
                                        nR.qlow <- purrr::map(.x = sub.l, .f = "doseresp.lower")
                                        
@@ -2601,6 +2591,7 @@ extra_sim <- function(mcmc.object, replace.sims = TRUE, update.dr = FALSE){
                                          apply(., c(1, 2), mean, na.rm = TRUE)
                                        
                                        list(doseresp.mean = nR.mean,
+                                            doseresp.median = nR.median,
                                             doseresp.lower = nR.q.low,
                                             doseresp.upper = nR.q.up)}
     
@@ -2657,6 +2648,7 @@ extra_sim <- function(mcmc.object, replace.sims = TRUE, update.dr = FALSE){
 plot_results <- function(mcmc.object, 
                          layout.ncol = 1,
                          pars.to.plot = NULL,
+                         include.ERR = TRUE,
                          select.n = NULL,
                          select.obs = NULL,
                          common.scale = FALSE,
@@ -2665,6 +2657,9 @@ plot_results <- function(mcmc.object,
                          n.cols = 12,
                          darken.bars = FALSE,
                          pt.size = 8.5,
+                         plot.labels = TRUE,
+                         max_credwidth = NULL,
+                         max_prb = NULL,
                          save.to.disk = TRUE,
                          save.individual.plots = FALSE,
                          output.format = "pdf"){
@@ -2675,12 +2670,20 @@ plot_results <- function(mcmc.object,
   #' @param mcmc.object List. Output from the \code{run_scenario()} function.
   #' @param layout.ncol Integer between 1 and 3. Number of columns used in the final plot layout.
   #' @param pars.to.plot Parameter(s) of interest. By default, the function will produce plots for every monitored parameter (param = NULL). 
+  #' @param include.ERR Logical. Whether the effective response range (ERR) should be included in the outputs.
   #' @param select.n Subset of sample sizes to display. All values are shown when set to NULL (the default). 
   #' @param select.obs Subset of values to display for the observation model parameter (i.e. uncertainty.dose in scenarios 1 and 2, prop.sat in scenarios 3 and 4). All values are shown when set to NULL (the default). 
+  #' @param common.scale Logical. Whether to use a common scale across all heat plots.
   #' @param summary.method Character vector. One of "mean" or "median. Whether to calculate the average or median value of posterior statistics across simulations.
   #' @param start.shade Number between 0 and 1 indicating the shade of the lightest to use on the Y-axis. Higher values indicate darker shades. Defaults to 0.2.
   #' @param n.cols Integer. Minimum number of colours used to define the colour palettes of the heat plots.
   #' @param darken.bars Logical. Whether to add dark lines to the plot to enhance the legibility of the lightest colours.  Defaults to FALSE.
+  #' @param pt.size Size of the points used to denote the average posterior medians in forest plots.
+  #' @param plot.labels Logical. Whether axes and other plot labels should be rendered.
+  #' @param max_credwidth Upper bound on the range of values to be plotted for the credible interval widths. 
+  #' All values above this threshold will appear in grey.
+  #' @param max_prb Upper bound on the range of values to be plotted for the prior posterior overlap. 
+  #' All values above this threshold will appear in grey.
   #' @param save.to.disk Logical. Whether to save the plots to disk. Defaults to FALSE.
   #' @param save.individual.plots Logical. If TRUE, individual heat plots are saved separately on disk.
   #' @param output.format Output file type. Defaults to "pdf".
@@ -2717,7 +2720,7 @@ plot_results <- function(mcmc.object,
   
   if(!is.null(pars.to.plot)){
   if(mcmc.object$params$scenario %in% c(1,2)){
-    if (!pars.to.plot %in% c("mu", "omega")) 
+    if (all(!pars.to.plot %in% c("mu", "omega"))) 
       ArgumentCheck::addError(
         msg = "Parameter(s) not recognised.",
         argcheck = f.checks
@@ -2726,7 +2729,7 @@ plot_results <- function(mcmc.object,
   
   if(!is.null(pars.to.plot)){
     if(mcmc.object$params$scenario %in% c(1,2)){
-      if (!pars.to.plot %in% c("mu", "phi", "sigma", "beta", "alpha")) 
+      if (all(!pars.to.plot %in% c("mu", "phi", "sigma", "beta", "alpha")))
         ArgumentCheck::addError(
           msg = "Parameter(s) not recognised.",
           argcheck = f.checks
@@ -2786,22 +2789,24 @@ plot_results <- function(mcmc.object,
   viridis.modified[length(viridis.modified)] <- c("#ffad08") # ffbb00
   viridis.modified <- rev(viridis.modified)
   
-  primary.colours <- tibble::lst(alpha = seq(start.shade, 1, 
-                                             length.out = length(unique(ridge.colors[,col_names[2]]))),
-                                 col = viridis.modified) %>% 
+  primary.colours <- tibble::lst(
+    alpha = seq(start.shade, 1,
+                length.out = length(unique(ridge.colors[, col_names[2]]))),
+    col = viridis.modified) %>%
     purrr::cross_df()
   
   #'--------------------------------------------------------------------
   # Calculate colours (emulate opacity without actually making colours transparent)
   #'--------------------------------------------------------------------
   
-  ridge.colors <- cbind(ridge.colors, primary.colours) %>% 
-    dplyr::mutate(., tcol = purrr::map2_chr(.x = .$col, 
-                                            .y = .$alpha, 
-                                            .f = ~hexa2hex(input.colour = .x, opacity = .y, bg.colour = "white"))) %>% 
-    
-    dplyr::mutate(n = as.character(n), 
-                  !!col_names[2] := as.character(!!as.name(col_names[2]))) %>% 
+  ridge.colors <- cbind(ridge.colors, primary.colours) %>%
+    dplyr::mutate(., tcol = purrr::map2_chr(
+      .x = .$col,
+      .y = .$alpha,
+      .f = ~ hexa2hex(input.colour = .x, opacity = .y, bg.colour = "white"))) %>%
+    dplyr::mutate(
+      n = as.character(n),
+      !!col_names[2] := as.character(!!as.name(col_names[2]))) %>%
     tibble::as_tibble(.)
   
   #'--------------------------------------------------------------------
@@ -2816,7 +2821,9 @@ plot_results <- function(mcmc.object,
                                 times = length(n.whales))
   
   ridge.colors <- dplyr::mutate(.data = ridge.colors, 
-                                tcol = hexa2hex(input.colour = tcol, opacity = darkalpha, bg.colour = "black"))
+                                tcol = hexa2hex(input.colour = tcol, 
+                                                opacity = darkalpha, 
+                                                bg.colour = "black"))
   
   #'--------------------------------------------------------------------
   # Create a bivariate legend for the forest plots
@@ -2840,7 +2847,7 @@ plot_results <- function(mcmc.object,
   
   cat(paste0("Preparing data ...\n"))
   
-  params.monitored <- c(params.monitored, "ERR")
+  if(include.ERR) params.monitored <- c(params.monitored, "ERR")
   
   make_dat <- function(input.data){
     
@@ -2887,10 +2894,13 @@ plot_results <- function(mcmc.object,
                  # Assign colours to data
                  #'--------------------------------------------------------------------
                  
-                 suppressWarnings(post.est <- post.est %>% 
-                                    dplyr::left_join(x = ., 
-                                                     y = ridge.colors, by = c("n", col_names[2], "alpha")) %>% 
-                                    dplyr::mutate(comb = paste0("n = ", removelzero(n), "; ", col_names[2], " = ", removelzero(!!as.name(col_names[2])))))
+                 suppressWarnings(post.est <- post.est %>%
+                                    dplyr::left_join(
+                                      x = .,
+                                      y = ridge.colors, by = c("n", col_names[2], "alpha")) %>%
+                                    dplyr::mutate(comb = paste0("n = ", removelzero(n), "; ", 
+                                                                col_names[2], " = ", 
+                                                                removelzero(!!as.name(col_names[2])))))
                  
                  #'--------------------------------------------------------------------
                  # Calculate mean values for plotting
@@ -2942,10 +2952,10 @@ plot_results <- function(mcmc.object,
                  #'--------------------------------------------------------------------
                  
                  post.forest$ord <- factor(post.forest$tcol, 
-                                           levels = unique(post.forest$tcol[order(as.numeric(post.forest$index))]))
+                  levels = unique(post.forest$tcol[order(as.numeric(post.forest$index))]))
                  
                  post.forest$comb <- factor(post.forest$comb, 
-                                            levels = unique(post.forest$comb[order(as.numeric(post.forest$index))]))
+                  levels = unique(post.forest$comb[order(as.numeric(post.forest$index))]))
                  
                  #'--------------------------------------------------------------------
                  # Retrieve colours
@@ -2960,7 +2970,6 @@ plot_results <- function(mcmc.object,
                  #'--------------------------------------------------------------------
                  
                  lgd$ord <- factor(lgd$tcol, levels = lgd$tcol[nrow(lgd):1])
-                 # lgd$ord <- factor(lgd$tcol, levels = lgd$tcol[order(as.numeric(lgd$index))])
                  
                  #'--------------------------------------------------------------------
                  # Data for heat plots
@@ -3020,8 +3029,10 @@ plot_results <- function(mcmc.object,
                                                    temp}) %>%
     purrr::map(.x = ., .f = ~make_dat(.x)) %>%
     purrr::set_names(x = ., nm = addlzero(n.whales)) %>%
-    purrr::map_depth(.x = ., .depth = 1, .f = ~purrr::set_names(x = .x, nm = params.monitored)) %>%
-    purrr::map_depth(.x = ., .depth = 2, .f = ~purrr::set_names(x = .x, nm = c("post.forest", "lgd", "trueval")))
+    purrr::map_depth(.x = ., .depth = 1, 
+                     .f = ~purrr::set_names(x = .x, nm = params.monitored)) %>%
+    purrr::map_depth(.x = ., .depth = 2, 
+                     .f = ~purrr::set_names(x = .x, nm = c("post.forest", "lgd", "trueval")))
   
   #'--------------------------------------------------------------------
   # Define functions for plotting
@@ -3114,13 +3125,14 @@ plot_results <- function(mcmc.object,
       
       suppressWarnings(scale_x_discrete(labels = paste0("n = ", removelzero(dat$post.forest$n)))) +
       
-      {if(param=="mu") ylab(mu ~ "(dB)")} +
-      {if(param=="phi") ylab(phi ~ "(dB)")} +
-      {if(param=="sigma") ylab(sigma ~ "(dB)")} +
-      {if(param=="omega") ylab(omega ~ "(dB)")} +
-      {if(param=="beta") ylab(beta ~ "(dB)")} +
-      {if(param=="alpha") ylab(alpha ~ "(dB)")} +
-      {if(param=="ERR") ylab("ERR (km)")} +
+      
+      {if(plot.labels) if(param =="mu") ylab(mu ~ "(dB)")} +
+      {if(plot.labels) if(param =="phi") ylab(phi ~ "(dB)")} +
+      {if(plot.labels) if(param =="sigma") ylab(sigma ~ "(dB)")} +
+      {if(plot.labels) if(param =="omega") ylab(omega ~ "(dB)")} +
+      {if(plot.labels) if(param =="beta") ylab(beta ~ "(dB)")} +
+      {if(plot.labels) if(param =="alpha") ylab(alpha ~ "(dB)")} +
+      {if(plot.labels){if(param =="ERR") ylab("ERR (km)")} else {ylab("")}} +
       
       xlab("") +
       
@@ -3128,7 +3140,7 @@ plot_results <- function(mcmc.object,
       ggnewscale::new_scale_fill() + # To allow multiple colour scales
       
       theme(axis.text.y = element_blank(),
-            axis.text.x = element_text(size = 18, margin = margin(t = 10, r = 0, b = 0, l = 0)),
+            axis.text.x = element_text(size = 15, margin = margin(t = 10, r = 0, b = 0, l = 0)),
             axis.ticks.y = element_blank(),
             axis.ticks.x = element_blank(),
             panel.grid.major = element_line(size = 0.2),
@@ -3140,7 +3152,39 @@ plot_results <- function(mcmc.object,
     
   } # End make_forestplot
   
-  make_heatplot <- function(dat, param, max.cred.width = 85, max.prb = 50, max.ppo = 35){
+  if(is.null(max_credwidth)){
+    max_credwidth <- mcmc.object$mcmc %>% 
+      dplyr::filter(param %in% params.monitored) %>% 
+      dplyr::transmute(cred.width = post.upper - post.lower) %>% 
+      dplyr::pull(cred.width) %>% max(.)
+    
+    if(include.ERR){
+      
+      max.ERR.width <- mcmc.object$mcmc %>% 
+        dplyr::transmute(cred.width = err.up - err.low) %>% 
+        dplyr::pull(cred.width) %>% max(.)
+      
+      max_credwidth <- max(c(max_credwidth, max.ERR.width)) }}
+
+  if(is.null(max_prb)){
+  max_prb <- mcmc.object$mcmc %>% 
+    dplyr::filter(param %in% params.monitored) %>% 
+    dplyr::transmute(prb = abs(prb)) %>% 
+    dplyr::pull(prb) %>% max(.)
+  
+  if(include.ERR){
+    max.ERR.prb <- mcmc.object$mcmc %>% 
+      dplyr::transmute(prb = abs(err.prb)) %>% 
+      dplyr::pull(prb) %>% max(.)
+
+    max_prb <- max(c(max_prb, max.ERR.prb)) 
+  
+  }}
+  
+  make_heatplot <- function(dat, param,
+                            max.cred.width = max_credwidth,
+                            max.prb = max_prb,
+                            max.ppo = 35){
     
     #'--------------------------------------------------------------------
     # Parameters to produce a plot for
@@ -3169,17 +3213,20 @@ plot_results <- function(mcmc.object,
 
                                
                                if(!is.null(mcmc.object$ppo)){
-                                 heat.range$ppo <- rep(list(0:max.ppo), 7)
-                               names(heat.range$ppo) <- names(heat.range$cred.width)}
                                
-                               heat.breaks <- pretty(x = heat.range[[.x]][[param]], n = n.cols +2) 
-                               # min.n = n.cols
+                                 heat.range$ppo <- rep(list(0:max.ppo), 7)
+                                 names(heat.range$ppo) <- names(heat.range$cred.width)}
+                               
+                                if(.x == "ppo") heat.breaks <- seq(0, 35, by = 2.5) else
+                                heat.breaks <- pretty(x = heat.range[[.x]][[param]], n = n.cols +2) 
+                               
                              }else{
 
                              heat.breaks <- pretty(x = heat.values, n = n.cols +2)}
-                             
                              heat.labels <- cut(heat.values, heat.breaks)
-                             max.point <- min(max(heat.breaks), get(paste0("max.", .x)))
+          
+                             # max.point <- min(max(heat.breaks), get(paste0("max.", .x)))
+                             if(.x == "cred.width") max.point <- max(max(heat.breaks), round(get(paste0("max.", .x)), 0)) else max.point <- min(max(heat.breaks), round(get(paste0("max.", .x)),0))
                              
                              heat.labels <- factor(heat.labels, levels = c(levels(heat.labels), paste0("> ", max.point)))
                              heat.labels[is.na(heat.labels)] <- paste0("> ", max.point)
@@ -3200,6 +3247,7 @@ plot_results <- function(mcmc.object,
                                  else myColors <- c(pals::brewer.blues(n = nlevels(dat$lgd$fct)-1), "gray90")}
                                
                                if(.x == "prb"){
+                                 
                                  if(!common.scale) myColors <- pals::viridis(n = length(unique(dat$lgd$fct))) else myColors <- c(pals::viridis(n = nlevels(dat$lgd$fct)-1), "gray90")}
                              
                              }else{
@@ -3211,8 +3259,8 @@ plot_results <- function(mcmc.object,
                                
                                if(.x == "ppo"){
                                  
-                                 if(!common.scale) myColors <- pals::coolwarm(n = length(unique(dat$lgd$fct))) else
-                                   myColors <- c(pals::coolwarm(n = nlevels(dat$lgd$fct)-1), "gray90")} 
+                                 if(!common.scale) myColors <- pals::brewer.blues(n = length(unique(dat$lgd$fct))) else
+                                   myColors <- c(pals::brewer.blues(n = nlevels(dat$lgd$fct)-1), "gray90")} 
                                
                                if(.x == "prb"){
                                if(!common.scale) myColors <- pals::viridis(n = length(unique(dat$lgd$fct))) else myColors <- c(pals::viridis(n = nlevels(dat$lgd$fct)-1), "gray90")}
@@ -3235,16 +3283,18 @@ plot_results <- function(mcmc.object,
                              heat.plot <- ggplot(data = dat$lgd, aes(x = x, y = y)) +
                                geom_tile(aes(fill = fct), col = "white", size = 0.5) +
                                scale_fill_manual(values = myColors, drop = FALSE) +
-                               {if(!common.scale){if(scenario %in% c(1,2)) ylab(expression("Observation uncertainty"~"("*delta*")"))}} +
-                               {if(!common.scale){if(scenario %in% c(3,4)) ylab("Proportion of SAT tags (%)")}} +
+                               {if(!common.scale){if(scenario %in% c(1,2)) 
+                                 ylab(expression("Observation uncertainty"~"("*delta*")"))}} +
+                               {if(!common.scale){if(scenario %in% c(3,4)) 
+                                 ylab("Proportion of SAT tags (%)")}} +
                                {if(!common.scale) xlab("Sample size (N)")} +
-                               {if(param=="mu") ggtitle(mu ~ "")} +
-                               {if(param=="omega") ggtitle(omega ~ "")} +
-                               {if(param=="phi") ggtitle(phi ~ "")} +
-                               {if(param=="sigma") ggtitle(sigma ~ "")} +
-                               {if(param=="alpha") ggtitle(alpha ~ "")} +
-                               {if(param=="beta") ggtitle(beta ~ "")} +
-                               {if(param=="ERR") ggtitle("ERR")} +
+                               {if(plot.labels) if(param=="mu") ggtitle(mu ~ "")} +
+                               {if(plot.labels) if(param=="omega") ggtitle(omega ~ "")} +
+                               {if(plot.labels) if(param=="phi") ggtitle(phi ~ "")} +
+                               {if(plot.labels) if(param=="sigma") ggtitle(sigma ~ "")} +
+                               {if(plot.labels) if(param=="alpha") ggtitle(alpha ~ "")} +
+                               {if(plot.labels) if(param=="beta") ggtitle(beta ~ "")} +
+                               {if(plot.labels) if(param=="ERR") ggtitle("ERR")} +
                                {if(!common.scale) labs(fill = lgd.title)} +
                                theme_ridges(font_family = "sans") +
                                theme(panel.background = element_blank(),
@@ -3253,26 +3303,34 @@ plot_results <- function(mcmc.object,
                                      panel.border = element_rect(colour = "black", fill = NA, size = 15),
                                      plot.margin = margin(t = 20, b = 10, l = 10)) +
                               {if(!common.scale) theme(axis.title = element_text(color = "black"),
-                                     axis.text.x = element_text(size = 12),
-                                     axis.text.y = element_text(size = 12),
-                                     text = element_text(size = 12))} +
+                                     axis.text.x = element_text(size = 15),
+                                     axis.text.y = element_text(size = 15),
+                                     text = element_text(size = 15))} +
                                {if(common.scale) theme(axis.title = element_blank(),
                                                        legend.title = element_blank(),
-                                                       text = element_text(size = 18),
-                                                       axis.text = element_text(size = 18))} +
+                                                       text = element_text(size = 35),
+                                                       axis.text = element_text(size = 35))} +
                                suppressWarnings(scale_x_continuous(breaks = unique(dat$lgd$x), 
                                                                    labels = unique(removelzero(dat$lgd$n)), expand = c(0,0))) +
                                suppressWarnings(scale_y_continuous(breaks = unique(dat$lgd$y), 
                                                                    labels = unique(removelzero(unlist(dat$lgd[,col_names[2]]))), 
                                                                    expand = c(0,0))) +
-                               {if(!common.scale) theme(legend.position = "bottom", legend.text = element_text(size = 12), legend.title = element_text(face = "bold"))} +
+                               {if(!common.scale) theme(legend.position = "bottom", 
+                                                        legend.text = element_text(size = 12), 
+                                                        legend.title = element_text(face = "bold"))} +
+                               {if(!plot.labels) theme(axis.title.x = element_blank(),
+                                     axis.text.x = element_blank(),
+                                     axis.ticks.x = element_blank(),
+                                     axis.text.y = element_blank(),
+                                     axis.ticks.y = element_blank())} +
                                {if(common.scale) guides(fill = guide_legend(reverse = TRUE,
                                                           title.position = "top", 
                                                           title.vjust = 1.5))} + 
                                {if(!common.scale) guides(fill = guide_legend(nrow = round(n.cols/2), 
                                                                             byrow = FALSE,
                                                                             title.position = "top", 
-                                                                            title.vjust = 1.5))}
+                                                                            title.vjust = 1.5))} +
+                               {if(!plot.labels) theme(legend.position ='none')} 
                              
                            }) %>% 
       purrr::set_names(x = ., nm = heat.params)
@@ -3417,7 +3475,7 @@ plot_results <- function(mcmc.object,
     
     # Heat maps (individual)
     
-    if(common.scale) plot.dimensions <- c(4, 5) else plot.dimensions <- c(5, 4)
+    if(common.scale) plot.dimensions <- c(10, 10) else plot.dimensions <- c(5, 4)
       
     purrr::walk(.x = params.monitored,
                 .f = ~{
@@ -3461,6 +3519,7 @@ plot_doseresponse <- function(mcmc.object,
                               output.format = "pdf",
                               plot.width = 10,
                               plot.height = 10,
+                              plot.labels = TRUE,
                               plot.res = 300){
   
   #'--------------------------------------------------------------------
@@ -3484,7 +3543,8 @@ plot_doseresponse <- function(mcmc.object,
   #'-------------------------------------------------
   
   if (!dir.exists(file.path(paste0(getwd(),"/out/scenario_", mcmc.object$params$scenario))))
-    dir.create(path = file.path(paste0(getwd(),"/out/scenario_", mcmc.object$params$scenario)), showWarnings = FALSE)
+    dir.create(path = file.path(paste0(getwd(),"/out/scenario_", mcmc.object$params$scenario)),
+               showWarnings = FALSE)
   
   #'--------------------------------------------------------------------
   # Retrieve simulation parameters
@@ -3529,7 +3589,8 @@ plot_doseresponse <- function(mcmc.object,
                                                      scenario, "_doseresponse_plots_", index, ".pdf"), 
                                               width = plot.width, height = plot.height)
   
-  par(mfrow = c(n.row, n.col))
+  if(plot.labels)  par(mfrow = c(n.row, n.col)) else par(mfrow = c(n.row, n.col), oma = c(5,4,0,0) + 0.1,
+        mar = c(0,0,1,1) + 0.1)
 
   combs <- combs %>% 
     dplyr::mutate(blank = 0) 
@@ -3585,18 +3646,28 @@ plot_doseresponse <- function(mcmc.object,
                  
                }else{
                  
-                 title.part.1 <- paste0("N = ", removelzero(gsub(pattern = "n_", replacement = "", x = combs$n[.x])), " |")
+                 title.part.1 <- paste0("N = ", removelzero(gsub(pattern = "n_", 
+                                                                 replacement = "", 
+                                                                 x = combs$n[.x])), " |")
                  
-                 if(scenario %in% c(1,2)){
-                   
-                   title.part.2 <- paste0(removelzero(gsub(pattern = "RLsd_", replacement = "", x = combs[.x, 2])), " dB")
-                   plot.title <- bquote(bold(.(title.part.1)~delta == .(title.part.2)))}
-
-                 if(scenario %in% c(3,4)) plot.title <- paste0("N = ", 
-                                          removelzero(gsub(pattern = "n_", replacement = "", x = combs$n[.x])), 
-                                          " | P(SAT) = ",
-                                          as.numeric(removelzero(gsub(pattern = "sat_", replacement = "", x = combs[.x, 2])))," %")
+                 if (scenario %in% c(1, 2)) {
+                   title.part.2 <- paste0(removelzero(gsub(pattern = "RLsd_", 
+                                                           replacement = "", 
+                                                           x = combs[.x, 2])), " dB")
+                   plot.title <- bquote(bold(.(title.part.1) ~ delta == .(title.part.2)))}
                  
+                 if (scenario %in% c(3, 4)) {
+                   plot.title <- paste0(
+                     "N = ",
+                     removelzero(gsub(pattern = "n_", 
+                                      replacement = "", 
+                                      x = combs$n[.x])),
+                     " | P(SAT) = ",
+                     as.numeric(removelzero(gsub(pattern = "sat_", 
+                                                 replacement = "", 
+                                                 x = combs[.x, 2]))), " %")}
+                 
+                 if(plot.labels){
                  plot(x = mcmc.object$dose.response$dose.range,
                       y = seq(0,1, length = length(mcmc.object$dose.response$dose.range)), 
                       type = "n",
@@ -3609,6 +3680,20 @@ plot_doseresponse <- function(mcmc.object,
                       cex.main = 1.1, 
                       cex.axis = 1.1,
                       main = plot.title)
+                 }else{
+                   plot(x = mcmc.object$dose.response$dose.range,
+                        y = seq(0,1, length = length(mcmc.object$dose.response$dose.range)), 
+                        type = "n",
+                        xlab = "", 
+                        ylab = "",
+                        ylim = c(0,1),
+                        xlim = c(mcmc.object$params$lower.bound,
+                                 mcmc.object$params$upper.bound),
+                        cex.lab = 1.2, 
+                        cex.main = 1.1, 
+                        cex.axis = 1.1,
+                        main = "") 
+                 }
                  
                  
                  #'-------------------------------------------------
@@ -3629,13 +3714,13 @@ plot_doseresponse <- function(mcmc.object,
                                        border = NA)})
                  
                  #'-------------------------------------------------
-                 # Add posterior mean
+                 # Add posterior median
                  #'-------------------------------------------------
                  
                  nn <- names(mcmc.object$dose.response$p) %>% unique()
                  
                  lines(mcmc.object$dose.response$dose.range, 
-                       mcmc.object$dose.response$p[[which(nn==polygon.label)]]$doseresp.mean,
+                       mcmc.object$dose.response$p[[which(nn==polygon.label)]]$doseresp.median,
                        type = "l",
                        lwd = 2, 
                        col = "#eaaf00")
@@ -3870,7 +3955,8 @@ xy_error <- function(argos.data,
   res <- list(random = sample(x = RLsim, size = 1), 
               rl = received.lvl)
   
-  if(multi) res <- append(x = res, values = list(sd = rl.sd)) else res <- append(x = res, values = list(mean = mean(RLsim), sd = sd(RLsim)))
+  if(multi) res <- append(x = res, values = list(sd = rl.sd)) else
+    res <- append(x = res, values = list(mean = mean(RLsim), sd = sd(RLsim)))
   
   return(res)
   
@@ -3880,21 +3966,39 @@ xy_error <- function(argos.data,
 # Function to compute SD(dose) as a function of distance from source
 #'--------------------------------------------------------------------
 
-run_argos_example <- function(N = 500, 
+run_argos_example <- function(N = 1000, 
+                              species.argos = "Zc",
                               range.min = 10, 
                               range.max = 240, 
                               range.increment = 10,
-                              source.lvl = 210){
+                              source.lvl = 215,
+                              boxplot.col = "grey",
+                              save.file = FALSE){
   
   #'---------------------------------------------
   # PARAMETERS
   #'---------------------------------------------
   #' @param N Number of simulated animals (i.e. error ellipses).
+  #' @param species.argos Species of interest. Either "Zc" for Ziphius cavirostris (Cuvier's beaked whale) or "Gm" for Globicephala melas (Long-finned pilot whale).
   #' @param range.min Minimum distance from the noise source. 
-  #' @param range.maximum Maximum distance from the noise source.
+  #' @param range.max Maximum distance from the noise source.
   #' @param range.increment Increments by which to divide the range.
   #' @param source.lvl Level of the noise source.
+  #' @param boxplot.col Colour of boxplots
+  #' @param save.file Logical. Whether to save the outputs to disk.
   #'---------------------------------------------
+  
+  argos <- purrr::map_dfr(.x = list.files(path = "./data", pattern = ".csv", full.names = TRUE), 
+                          .f = ~readr::read_csv(file = .x, 
+                                                col_types = c("cccTccddddddc"),
+                                                na = "")) %>%
+    janitor::clean_names(.) %>% 
+    dplyr::mutate(species = ifelse(deploy_id == "ZcTag056", "Zc", "Gm")) %>% 
+    dplyr::filter(species == species.argos) %>% 
+    dplyr::mutate_if(sapply(., is.character), as.factor) %>%  # Convert characters to factors
+    dplyr::filter(is.na(comment)) %>% 
+    dplyr::select(-comment) %>% 
+    na.omit(.)
   
   # SD(dose) at incremental distances from source
   
@@ -3903,7 +4007,7 @@ run_argos_example <- function(N = 500,
   # Calculate received levels at those distances
   
   dist.TLs <- TL(rge = dist.increments) # How much is lost
-  dist.RLs <- 210-dist.TLs # Received levels given loss
+  dist.RLs <- source.lvl-dist.TLs # Received levels given loss
   
   # Apply Argos error ellipses
   
@@ -3946,8 +4050,9 @@ run_argos_example <- function(N = 500,
                    axis.title.x = element_text(margin = margin(t = 15, r = 0, b = 0, l = 0)),
                    axis.ticks = element_blank())
   
-  rl.dist.df %>%
+  final.plot <- rl.dist.df %>%
     ggplot(data = ., aes(x = rge_f, y = sd_dose)) +
+    # geom_boxplot(fill = boxplot.col) +
     geom_boxplot(aes(fill = rge_f)) +
     scale_fill_manual(values = rev(pals::parula(nlevels(rl.dist.df$rge_f)))) +
     xlab("Range (km)") + ylab("sd(RL) after ARGOS correction") +
@@ -3955,11 +4060,13 @@ run_argos_example <- function(N = 500,
     ylab("SD in received levels (dB re1\u03BCPa)") +
     theme(legend.position = "none")
   
+  if(save.file) ggplot2::ggsave(filename = "out/fig_argos_sd.pdf", device = cairo_pdf, width = 8, height = 5) else
+    print(final.plot)
+  
 }
 
-# run_argos_example(N = 2000)
+# run_argos_example(N = 1000)
 
-# ggplot2::ggsave(filename = "/Users/philippebouchet/Google Drive/Documents/postdoc/creem/dMOCHA/dose_response/simulation/dose_uncertainty/rmd/fig/fig_argos_sd.pdf", device = cairo_pdf, width = 8, height = 5)
 
 #'--------------------------------------------------------------------
 # Function to compile results from different simulation runs
@@ -4288,7 +4395,7 @@ stop_cluster <- function(worker = cl){
 }
 
 #'--------------------------------------------------------------------
-# Quick convenience function to add/remove leading zeroes
+# Quick convenience functions to add/remove leading zeroes
 #'--------------------------------------------------------------------
 
 # Using leading zeroes is necessary to get correct order in plots etc. 
@@ -4336,20 +4443,10 @@ removelabels <- function(scenario.id, tbl){
   return(tbl)}
 
 #'--------------------------------------------------------------------
-# Modified version of bayesplot::ppc_dens_overlay that does not throw errors with NAS
+# Modified version of bayesplot::ppc_dens_overlay that does not throw errors with NAs
 #'--------------------------------------------------------------------
 
 ppc_densoverlay <- function(y, y.rep, n.yrep, lbound, ubound){
-  
-  #'--------------------------------------------------------------------
-  # PARAMETERS
-  #'--------------------------------------------------------------------
-  #' @param y 
-  #' @param y.rep 
-  #' @param n.yrep 
-  #' @param lbound 
-  #' @param ubound 
-  #'--------------------------------------------------------------------
   
   #'-------------------------------------------------
   # Compile y and yrep into individual data.frames
