@@ -6,10 +6,9 @@
 #' ------------------------------------------------------------------------
 #' ------------------------------------------------------------------------ 
 #' 
-#' Author: Phil Bouchet
-#' Last update: 2020-04-07
-#' Project: LMR Dose-Response
-#' R version: 3.6.0 "Planting of a Tree"
+#' Author: Phil J Bouchet
+#' Last update: 2021-01-15
+#' R version: 4.0.3
 #' --------------------------------------------------------------------
 
 #'--------------------------------------------------------------------
@@ -45,6 +44,7 @@ pacman::p_load(rjags,          # Bayesian graphical models using MCMC
                hms,            # Pretty time of day
                cowplot,        # Add-on for complex ggplot
                grDevices,      # R Graphics Devices and Support for Colours and Fonts
+               here,           # Find files
                tictoc)         # Functions for timing
       
 
@@ -53,12 +53,6 @@ pacman::p_load(rjags,          # Bayesian graphical models using MCMC
 #'--------------------------------------------------------------------
 
 set.seed(45)
-
-#'--------------------------------------------------------------------
-# Set the working directory
-#'--------------------------------------------------------------------
-
-setwd("/Users/philippebouchet/Google Drive/Documents/postdoc/creem/dMOCHA/dose_response/simulation/dose_uncertainty")
 
 #'---------------------------------------------
 # Set tibble options
@@ -69,43 +63,47 @@ options(pillar.neg = FALSE) # No colouring negative numbers
 options(pillar.subtle = TRUE)
 options(pillar.sigfig = 4)
 
+options(dplyr.summarise.inform = FALSE) # Suppress dplyr::summarise warnings
+
 #'--------------------------------------------------------------------
 # Load required functions
 #'--------------------------------------------------------------------
 
-source('/Users/philippebouchet/Google Drive/Documents/git/doublemocha_sim/R/BayesianBR_simulation_functions.R')
+source(here::here("R/BayesianBR_simulation_functions.R"))
 
 #'-------------------------------------------------
-# Run the simulations (parallel)
+# Run the simulations (example)
 #'-------------------------------------------------
 
-mcmc.iter12 <- read.table('iter/BayesianBRModel_iter_12.txt', header = TRUE)
-mcmc.iter34 <- read.table('iter/BayesianBRModel_iter_34.txt', header = TRUE)
-
-mcmc.results <- run_scenario(scenario = 1,
+mcmc.results <- run_scenario(scenario = 2,
                              n.sim = 2, 
-                             n.whales = c(5, 10, 15, 20, 40),
-                             uncertainty.dose = c(2.5, 5, 10, 15, 20, 25, 30, 35),
-                             mcmc.auto = TRUE,
-                             mcmc.n = 10000,
+                             n.whales = c(5, 10, 20, 30),
+                             uncertainty.dose = c(2.5, 5, 10, 20, 35),
+                             prop.sat = c(20, 40, 60, 80, 100),
+                             mcmc.auto = FALSE,
+                             mcmc.n = 1000,
                              mcmc.save = TRUE,
-                             burn.in = 5000,
+                             burn.in = 1000,
                              mcmc.thin = 1,
                              mcmc.chains = 3,
                              verbose = TRUE,
                              no.tracePlots = 2,
-                             parallel.cores = 2, 
+                             parallel.cores = 10, 
                              check.convergence = TRUE,
                              save.results = TRUE)
 
 #'-------------------------------------------------
-# Extract, update, and plot results
+# Extract and plot results
 #'-------------------------------------------------
 
-mcmc.s1 <- compile_sim(scenario = 1)
-mcmc.rs1 <- extra_sim(mcmc.object = mcmc.s1, replace.sims = TRUE, update.dr = TRUE)
+plot_doseresponse(mcmc.object = mcmc.results, save.to.disk = TRUE, n.row = 3, n.col = 2, select.n = c(5, 10, 30), select.obs = c(2.5, 35), concatenate = TRUE, plot.height = 4, plot.width = 3, plot.labels = TRUE)
 
-plot_results(mcmc.object = mcmc.rs1, layout.ncol = 1, save.to.disk = TRUE)
-plot_results(mcmc.object = mcmc.s1, layout.ncol = 1, save.to.disk = TRUE, select.n = c(5, 10, 20, 40), select.obs = c(2.5,5,10,20,35), save.individual.plots = TRUE, common.scale = TRUE)
-plot_results(mcmc.object = mcmc.s3, layout.ncol = 1, save.to.disk = TRUE, select.n = c(5, 10, 20, 40), select.obs = c(20,40,60,80,100), save.individual.plots = TRUE, common.scale = TRUE)
-plot_doseresponse(mcmc.object = mcmc.rs1, save.to.disk = TRUE, n.row = 3, n.col = 3)
+plot_results(mcmc.object = mcmc.results, layout.ncol = 1, save.to.disk = TRUE, save.individual.plots = TRUE, 
+             common.scale = TRUE, include.ERR = TRUE, plot.labels = FALSE, pt.size = 5, max_credwidth = 80, max_prb = 50)
+
+#'-------------------------------------------------
+# Compile different runs
+#'-------------------------------------------------
+
+mcmc.compiled <- compile_sim(scenario = 2)
+mcmc.full <- extra_sim(mcmc.object = mcmc.compiled, replace.sims = TRUE, update.dr = TRUE)
