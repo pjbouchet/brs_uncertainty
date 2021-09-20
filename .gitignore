@@ -15,3 +15,7 @@ out_original/
 Rplots.pdf
 *.Rhistory
 .Rhistory
+.Rhistory
+R/BayesianBR_results.R
+R/BayesianBR_supplementary_tables.R
+.Rhistory
